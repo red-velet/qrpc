@@ -13,7 +13,7 @@
         <module>qrpc-framework</module>
         <module>qrpc-manager</module>
         <module>qrpc-demo/qrpc-provider-demo</module>
-        <module>qrpc-demo/qrpc-client-demo</module>
+        <module>qrpc-demo/qrpc-consumer-demo</module>
         <module>qrpc-demo/qrpc-api</module>
     </modules>
 
