@@ -99,4 +99,21 @@ public class ZookeeperUtil {
             }
         }
     }
+
+    /**
+     * 判断节点是否存在
+     *
+     * @param zooKeeper zooKeeper实例
+     * @param nodePath  节点路径
+     * @param watcher   watch
+     * @return true-存在 false-不存在
+     */
+    public static Boolean exist(ZooKeeper zooKeeper, String nodePath, Watcher watcher) throws RuntimeException {
+        try {
+            return zooKeeper.exists(nodePath, watcher) != null;
+        } catch (KeeperException | InterruptedException e) {
+            log.error("判断节点【{}】是否存在时发生异常:", nodePath, e);
+            throw new RuntimeException(e);
+        }
+    }
 }

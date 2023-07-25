@@ -1,11 +1,12 @@
 package icu.chiou;
 
+import icu.chiou.discovery.RegistryConfig;
 import icu.chiou.impl.HelloQRpcImpl;
 
 /**
  * Author: chiou
  * createTime: 2023/7/23
- * Description: No Description
+ * Description: provider启动类
  */
 public class Application {
     public static void main(String[] args) {
@@ -21,7 +22,7 @@ public class Application {
         //(2) 启动服务
         QRpcBootstrap.getInstance()
                 .application("first-qrpc-provider")//配置应用名
-                .registry(new RegistryConfig("zookeeper:127.0.0.1:2181"))//配置注册中心
+                .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))//配置注册中心
                 .protocol(new ProtocolConfig("jdk"))//配置序列化协议
                 .publish(serviceConfig)//发布服务
                 .start();//启动

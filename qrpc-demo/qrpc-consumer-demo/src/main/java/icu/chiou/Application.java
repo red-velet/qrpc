@@ -1,6 +1,8 @@
 package icu.chiou;
 
 
+import icu.chiou.discovery.RegistryConfig;
+
 /**
  * Author: chiou
  * createTime: 2023/7/23

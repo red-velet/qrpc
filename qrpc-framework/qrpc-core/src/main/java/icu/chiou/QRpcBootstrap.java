@@ -1,8 +1,13 @@
 package icu.chiou;
 
+import icu.chiou.discovery.Registry;
+import icu.chiou.discovery.RegistryConfig;
+import icu.chiou.discovery.impl.ZookeeperRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: chiou
@@ -13,6 +18,22 @@ import java.util.List;
 public class QRpcBootstrap {
     //QRpcBootstrap是个单例,每个应用只有一个
     private final static QRpcBootstrap BOOTSTRAP = new QRpcBootstrap();
+    //定义相关的配置
+    private String applicationName;
+    private RegistryConfig registryConfig;
+    private ProtocolConfig protocolConfig;
+
+    //维护一个zookeeper示例
+    //private ZooKeeper zooKeeper;
+
+    //注册中心
+    private Registry registry = new ZookeeperRegistry();
+
+    //端口
+    private static final String port = "8088";
+
+    //维护已经且发布的服务列表
+    private final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
 
     private QRpcBootstrap() {
         //构造启动程序时需要做一些初始化
@@ -29,6 +50,7 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap application(String applicationName) {
+        this.applicationName = applicationName;
         return this;
     }
 
@@ -39,6 +61,11 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap registry(RegistryConfig registryConfig) {
+        //当前临时配置zookeeper在这里
+        //todo 尝试使用工厂方法获取注册中心
+        //zooKeeper = ZookeeperUtil.createZookeeper();
+        this.registry = registryConfig.getRegistry();
+        this.registryConfig = registryConfig;
         return this;
     }
 
@@ -49,6 +76,7 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap protocol(ProtocolConfig protocolConfig) {
+        this.protocolConfig = protocolConfig;
         if (log.isDebugEnabled()) {
             log.debug("当前工程使用了【{}】协议进行序列化", protocolConfig.toString());
         }
@@ -65,9 +93,12 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap publish(ServiceConfig<?> service) {
-        if (log.isDebugEnabled()) {
-            log.debug("服务【{}】已被注册", service.getInterface().getName());
-        }
+        //抽象了注册中心的概念
+        //把服务发布到注册中心
+        registry.register(service);
+        //1.当服务调用方，通过接口、方法名、参数列表调用方法时，怎么知道是具体哪个实例的方法呢？
+        //(1) new一个 (2) spring beadFactory.getBean(class) (3) 手动维护映射院系
+        SERVICE_LIST.put(service.getInterface().getName(), service);
         return this;
     }
 
@@ -87,6 +118,11 @@ public class QRpcBootstrap {
      */
     public void start() {
         //启动netty服务
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
