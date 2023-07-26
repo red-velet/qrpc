@@ -6,4 +6,14 @@ package icu.chiou.exceptions;
  * Description: No Description
  */
 public class ZookeeperException extends RuntimeException {
+    public ZookeeperException() {
+    }
+
+    public ZookeeperException(String message) {
+        super(message);
+    }
+
+    public ZookeeperException(Throwable cause) {
+        super(cause);
+    }
 }

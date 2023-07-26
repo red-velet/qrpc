@@ -119,7 +119,7 @@ public class QRpcBootstrap {
     public void start() {
         //启动netty服务
         try {
-            Thread.sleep(10000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -134,7 +134,7 @@ public class QRpcBootstrap {
     public QRpcBootstrap reference(ReferenceConfig<?> reference) {
         //在这个方法里我们是否可以拿到相关的配置项: 如注册中心
         //配置reference,便于后面调用get方法时,生成代理对象
-
+        reference.setRegistry(registry);
         return this;
     }
 

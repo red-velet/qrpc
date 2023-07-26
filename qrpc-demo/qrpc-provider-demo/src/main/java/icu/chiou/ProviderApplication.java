@@ -6,9 +6,9 @@ import icu.chiou.impl.HelloQRpcImpl;
 /**
  * Author: chiou
  * createTime: 2023/7/23
- * Description: provider启动类
+ * Description: 服务提供方启动器
  */
-public class Application {
+public class ProviderApplication {
     public static void main(String[] args) {
         //todo 服务提供方需要做的事情：注册服务、启动服务
         //1.封装需要注册的服务

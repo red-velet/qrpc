@@ -3,12 +3,17 @@ package icu.chiou.discovery.impl;
 import icu.chiou.ServiceConfig;
 import icu.chiou.constants.Constant;
 import icu.chiou.discovery.AbstractRegistry;
+import icu.chiou.exceptions.DiscoveryException;
 import icu.chiou.utils.NetUtil;
 import icu.chiou.utils.zookeeper.ZookeeperNode;
 import icu.chiou.utils.zookeeper.ZookeeperUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
+
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Author: chiou
@@ -52,5 +57,25 @@ public class ZookeeperRegistry extends AbstractRegistry {
         if (log.isDebugEnabled()) {
             log.debug("服务【{}】已被注册", serviceConfig.getInterface().getName());
         }
+    }
+
+    @Override
+    public InetSocketAddress lookup(String serviceName) {
+        //1.找到服务对应的节点
+        String serviceNodePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName;
+        List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, null);
+        //2.从zookeeper中获取其子节点列表
+        //获取了所有可用服务列表
+        List<InetSocketAddress> collect = serviceList.stream().map(ipString -> {
+            String[] ipAndPort = ipString.split(":");
+            String ip = ipAndPort[0];
+            int port = Integer.parseInt(ipAndPort[1]);
+            return new InetSocketAddress(ip, port);
+        }).collect(Collectors.toList());
+        if (collect.size() == 0) {
+            throw new DiscoveryException("没有发现可用服务列表");
+        }
+
+        return collect.get(0);
     }
 }

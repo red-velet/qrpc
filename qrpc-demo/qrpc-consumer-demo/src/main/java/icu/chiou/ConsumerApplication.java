@@ -6,9 +6,9 @@ import icu.chiou.discovery.RegistryConfig;
 /**
  * Author: chiou
  * createTime: 2023/7/23
- * Description: No Description
+ * Description: 服务调用方启动器
  */
-public class Application {
+public class ConsumerApplication {
     public static void main(String[] args) {
         //todo 服务消费者需要做的事情：获取具体待消费对象实例(代理对象:封装连接、获取对象)
         //reference进行代理,其中封装连接、返回对象
@@ -22,7 +22,7 @@ public class Application {
         //4.发送请求,携带参数(接口名、方法名、参数列表),获得响应
         QRpcBootstrap.getInstance()
                 .application("first-qrpc-consumer")
-                .registry(new RegistryConfig("zookeeper:127.0.0.1:2181"))
+                .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
                 .reference(reference)
                 .start();
 

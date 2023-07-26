@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
 
+import java.net.InetSocketAddress;
+
 /**
  * Author: chiou
  * createTime: 2023/7/25
@@ -52,5 +54,10 @@ public class NacosRegistry extends AbstractRegistry {
         if (log.isDebugEnabled()) {
             log.debug("服务【{}】已被注册", serviceConfig.getInterface().getName());
         }
+    }
+
+    @Override
+    public InetSocketAddress lookup(String serviceName) {
+        return null;
     }
 }
