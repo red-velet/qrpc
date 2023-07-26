@@ -156,7 +156,7 @@ public class QRpcBootstrap {
                                     log.info("服务提供者收到消息:---> {}", buf.toString(StandardCharsets.UTF_8));
                                     //回应
                                     ctx.channel()
-                                            .writeAndFlush(Unpooled.copiedBuffer("好的,等下就帮你掉接口返回结果给你的异步调用".getBytes()));
+                                            .writeAndFlush(Unpooled.copiedBuffer("i like you to".getBytes()));
                                 }
                             });
                         }

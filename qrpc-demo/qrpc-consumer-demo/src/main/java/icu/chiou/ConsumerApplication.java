@@ -30,7 +30,7 @@ public class ConsumerApplication {
 
         //获取代理对象
         HelloQRpc helloQRpc = reference.get();
-        String love = helloQRpc.say("i like you!");
-        log.info("love:--->{}", love);
+        String love = helloQRpc.say("i love you!");
+        log.info("return is {}", love);
     }
 }
