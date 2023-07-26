@@ -2,11 +2,20 @@ package icu.chiou;
 
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
-import icu.chiou.discovery.impl.ZookeeperRegistry;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,13 +36,19 @@ public class QRpcBootstrap {
     //private ZooKeeper zooKeeper;
 
     //注册中心
-    private Registry registry = new ZookeeperRegistry();
+    private Registry registry;
 
     //端口
-    private static final String port = "8088";
+    private int port = 8088;
 
     //维护已经且发布的服务列表
     private final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
+
+    //netty的连接缓存-channel
+    public final static Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
+
+    //全局被挂起的completableFuture
+    public final static Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
     private QRpcBootstrap() {
         //构造启动程序时需要做一些初始化
@@ -118,6 +133,50 @@ public class QRpcBootstrap {
      */
     public void start() {
         //启动netty服务
+        EventLoopGroup boss = null;
+        EventLoopGroup worker = null;
+        try {
+            //1.创建EventGroup
+            boss = new NioEventLoopGroup(2);
+            worker = new NioEventLoopGroup(10);
+
+            //2.服务器引导程序
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap
+                    .group(boss, worker)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            socketChannel.pipeline().addLast(new SimpleChannelInboundHandler() {
+
+                                @Override
+                                protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                    ByteBuf buf = (ByteBuf) msg;
+                                    log.info("服务提供者收到消息:---> {}", buf.toString(StandardCharsets.UTF_8));
+                                    //回应
+                                    ctx.channel()
+                                            .writeAndFlush(Unpooled.copiedBuffer("好的,等下就帮你掉接口返回结果给你的异步调用".getBytes()));
+                                }
+                            });
+                        }
+                    });
+
+            //3.绑定端口
+            ChannelFuture channelFuture = serverBootstrap.bind(port).sync();
+
+            //4.获取数据
+            channelFuture.channel().closeFuture().sync();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                boss.shutdownGracefully().sync();
+                worker.shutdownGracefully().sync();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {

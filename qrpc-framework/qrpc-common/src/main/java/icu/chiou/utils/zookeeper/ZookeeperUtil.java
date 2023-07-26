@@ -45,7 +45,9 @@ public class ZookeeperUtil {
             //创建zookeeper实例
             final ZooKeeper zooKeeper = new ZooKeeper(connectString, timeOut, event -> {
                 if (event.getState() == Watcher.Event.KeeperState.SyncConnected) {
-                    log.error("来自manager端:客户端连接成功");
+                    if (log.isDebugEnabled()) {
+                        log.debug("创建zookeeper实例成功,实例成功连接注册中心");
+                    }
                     countDownLatch.countDown();
                 }
             });

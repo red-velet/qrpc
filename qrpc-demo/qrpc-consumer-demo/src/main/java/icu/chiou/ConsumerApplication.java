@@ -2,12 +2,14 @@ package icu.chiou;
 
 
 import icu.chiou.discovery.RegistryConfig;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Author: chiou
  * createTime: 2023/7/23
  * Description: 服务调用方启动器
  */
+@Slf4j
 public class ConsumerApplication {
     public static void main(String[] args) {
         //todo 服务消费者需要做的事情：获取具体待消费对象实例(代理对象:封装连接、获取对象)
@@ -23,13 +25,12 @@ public class ConsumerApplication {
         QRpcBootstrap.getInstance()
                 .application("first-qrpc-consumer")
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
-                .reference(reference)
-                .start();
+                .reference(reference);
 
 
         //获取代理对象
         HelloQRpc helloQRpc = reference.get();
-        String reply = helloQRpc.say("i like you!");
-        System.out.println("reply = " + reply);
+        String love = helloQRpc.say("i like you!");
+        log.info("love:--->{}", love);
     }
 }
