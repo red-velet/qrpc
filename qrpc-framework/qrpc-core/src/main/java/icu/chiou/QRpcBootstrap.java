@@ -1,18 +1,21 @@
 package icu.chiou;
 
+import icu.chiou.channelHandler.handler.MethodInvokeHandler;
+import icu.chiou.channelHandler.handler.QRpcMessageDecoder;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +45,7 @@ public class QRpcBootstrap {
     private int port = 8088;
 
     //维护已经且发布的服务列表
-    private final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
+    public final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
 
     //netty的连接缓存-channel
     public final static Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
@@ -148,18 +151,26 @@ public class QRpcBootstrap {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
-                            socketChannel.pipeline().addLast(new SimpleChannelInboundHandler() {
+                            socketChannel.pipeline()
+                                    .addLast(new LoggingHandler())
+                                    .addLast(new QRpcMessageDecoder())
+                                    .addLast(new MethodInvokeHandler());
 
-                                @Override
-                                protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                    ByteBuf buf = (ByteBuf) msg;
-                                    log.info("服务提供者收到消息:---> {}", buf.toString(StandardCharsets.UTF_8));
-                                    //回应
-                                    ctx.channel()
-                                            .writeAndFlush(Unpooled.copiedBuffer("i like you to".getBytes()));
-                                }
-                            });
                         }
+//                        @Override
+//                        protected void initChannel(SocketChannel socketChannel) throws Exception {
+//                            socketChannel.pipeline().addLast(new SimpleChannelInboundHandler() {
+//
+//                                @Override
+//                                protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+//                                    ByteBuf buf = (ByteBuf) msg;
+//                                    log.info("服务提供者收到消息:---> {}", buf.toString(StandardCharsets.UTF_8));
+//                                    //回应
+//                                    ctx.channel()
+//                                            .writeAndFlush(Unpooled.copiedBuffer("i like you to".getBytes()));
+//                                }
+//                            });
+//                        }
                     });
 
             //3.绑定端口

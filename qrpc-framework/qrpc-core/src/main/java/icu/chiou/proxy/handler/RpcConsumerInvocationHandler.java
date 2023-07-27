@@ -3,6 +3,7 @@ package icu.chiou.proxy.handler;
 import icu.chiou.NettyBootstrapInitializer;
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.discovery.Registry;
+import icu.chiou.enumeration.RequestType;
 import icu.chiou.exceptions.DiscoveryException;
 import icu.chiou.exceptions.NetworkException;
 import icu.chiou.transport.message.QRpcRequest;
@@ -69,7 +70,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
         QRpcRequest qRpcRequest = QRpcRequest.builder()
                 .requestId(1L)
-                .requestType((byte) 1)
+                .requestType(RequestType.REQUEST.getId())
                 .serializeType((byte) 1)
                 .compressType((byte) 1)
                 .requestPayload(requestPayload)

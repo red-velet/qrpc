@@ -1,6 +1,7 @@
 package icu.chiou.channelHandler.handler;
 
 import icu.chiou.constants.MessageFormatConstant;
+import icu.chiou.enumeration.RequestType;
 import icu.chiou.transport.message.QRpcRequest;
 import icu.chiou.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
@@ -26,6 +27,16 @@ import java.io.ObjectOutputStream;
  * 1byte = serializeType
  * 8byte = requestId
  * xxx byte = body
+ * * * <pre>
+ *  *  *   0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   22
+ *  *  *   +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+ *  *  *   |    magic          |ver |head  len|    full length    | qt | ser|comp|              RequestId                |
+ *  *  *   +-----+-----+-------+----+----+----+----+-----------+----- ---+--------+----+----+----+----+----+----+---+---+
+ *  *  *   |                                                                                                             |
+ *  *  *   |                                         body                                                                |
+ *  *  *   |                                                                                                             |
+ *  *  *   +--------------------------------------------------------------------------------------------------------+---+
+ *  *  * </pre>
  */
 @Slf4j
 public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
@@ -35,29 +46,41 @@ public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
         //todo 需要为不同的消息类型做不同的处理: 普通信息、心跳信息
         //封装报文
         //魔术值 4个字节
-        out.writeBytes(MessageFormatConstant.MAGIC);
+        out.writeBytes(MessageFormatConstant.MAGIC_VALUE);
         //版本号
         out.writeByte(1);
         //首部长度
-        out.writeShort(MessageFormatConstant.HEADER_LENGTH);
+        out.writeShort(MessageFormatConstant.HEADER_LENGTH_VALUE);
         //报文长度
         //todo 还不确定先跳过4个位置
-        out.writeInt(out.writerIndex() + 4);
+        out.writeInt(out.writerIndex() + MessageFormatConstant.FULL_LENGTH_LENGTH);
         //类型
         out.writeByte(msg.getRequestType());
         out.writeByte(msg.getCompressType());
         out.writeByte(msg.getSerializeType());
         //请求id
         out.writeLong(msg.getRequestId());
-        byte[] body = getBodyBytes(msg.getRequestPayload());
-        out.writeBytes(body);
-        //重新处理报文长度 再写上4个 full length
-        int currIndex = out.writerIndex();//保存当前写指针位置
-        //移动到之前的位置
-        out.writeInt(7);
-        out.writeInt(body.length + MessageFormatConstant.HEADER_LENGTH);
-        //归位写指针
-        out.writerIndex(currIndex);
+        if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
+            //重新处理报文长度 再写上4个 full length
+            int currIndex = out.writerIndex();//保存当前写指针位置
+            //移动到之前的位置
+            out.writerIndex(MessageFormatConstant.FULL_LENGTH_OFFSET);
+            out.writeInt(MessageFormatConstant.HEADER_LENGTH_VALUE);
+            //归位写指针
+            out.writerIndex(currIndex);
+            return;
+        } else {
+            //请求体
+            byte[] body = getBodyBytes(msg.getRequestPayload());
+            out.writeBytes(body);
+            //重新处理报文长度 再写上4个 full length
+            int currIndex = out.writerIndex();//保存当前写指针位置
+            //移动到之前的位置
+            out.writerIndex(MessageFormatConstant.FULL_LENGTH_OFFSET);
+            out.writeInt(body.length + MessageFormatConstant.HEADER_LENGTH_VALUE);
+            //归位写指针
+            out.writerIndex(currIndex);
+        }
     }
 
     private byte[] getBodyBytes(RequestPayload payload) {
