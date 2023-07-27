@@ -69,7 +69,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .build();
 
         QRpcRequest qRpcRequest = QRpcRequest.builder()
-                .requestId(1L)
+                .requestId(QRpcBootstrap.ID_GENERATOR.generateId())
                 .requestType(RequestType.REQUEST.getId())
                 .serializeType((byte) 1)
                 .compressType((byte) 1)

@@ -35,6 +35,7 @@ public class QRpcBootstrap {
     private String applicationName;
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
+    public static final IDGenerator ID_GENERATOR = new IDGenerator(1L, 1L);
 
     //维护一个zookeeper示例
     //private ZooKeeper zooKeeper;
