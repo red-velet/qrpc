@@ -1,7 +1,8 @@
 package icu.chiou;
 
 import icu.chiou.channelHandler.handler.MethodInvokeHandler;
-import icu.chiou.channelHandler.handler.QRpcMessageDecoder;
+import icu.chiou.channelHandler.handler.QRpcRequestDecoder;
+import icu.chiou.channelHandler.handler.QRpcResponseEncoder;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
@@ -153,9 +154,9 @@ public class QRpcBootstrap {
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             socketChannel.pipeline()
                                     .addLast(new LoggingHandler())
-                                    .addLast(new QRpcMessageDecoder())
-                                    .addLast(new MethodInvokeHandler());
-
+                                    .addLast(new QRpcRequestDecoder())
+                                    .addLast(new MethodInvokeHandler())
+                                    .addLast(new QRpcResponseEncoder());
                         }
 //                        @Override
 //                        protected void initChannel(SocketChannel socketChannel) throws Exception {

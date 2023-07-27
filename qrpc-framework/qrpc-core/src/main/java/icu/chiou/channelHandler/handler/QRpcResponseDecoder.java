@@ -1,9 +1,7 @@
 package icu.chiou.channelHandler.handler;
 
 import icu.chiou.constants.MessageFormatConstant;
-import icu.chiou.enumeration.RequestType;
-import icu.chiou.transport.message.QRpcRequest;
-import icu.chiou.transport.message.RequestPayload;
+import icu.chiou.transport.message.QRpcResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
@@ -16,22 +14,21 @@ import java.io.ObjectInputStream;
 /**
  * Author: chiou
  * createTime: 2023/7/27
- * Description: 消息解码器
- * * * <pre>
- *  *  *   0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   22
- *  *  *   +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
- *  *  *   |    magic          |ver |head  len|    full length    | qt | ser|comp|              RequestId                |
- *  *  *   +-----+-----+-------+----+----+----+----+-----------+----- ---+--------+----+----+----+----+----+----+---+---+
- *  *  *   |                                                                                                             |
- *  *  *   |                                         body                                                                |
- *  *  *   |                                                                                                             |
- *  *  *   +--------------------------------------------------------------------------------------------------------+---+
- *  *  * </pre>
+ * Description: 响应的解码器
+ * * * * <pre>
+ *  *  *  *   0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15   16   17   18   19   20   21   22
+ *  *  *  *   +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+ *  *  *  *   |    magic          |ver |head  len|    full length    | cd | ser|comp|              RequestId                |
+ *  *  *  *   +-----+-----+-------+----+----+----+----+-----------+----- ---+--------+----+----+----+----+----+----+---+---+
+ *  *  *  *   |                                                                                                             |
+ *  *  *  *   |                                         body                                                                |
+ *  *  *  *   |                                                                                                             |
+ *  *  *  *   +--------------------------------------------------------------------------------------------------------+---+
+ *  *  *  * </pre>
  */
 @Slf4j
-public class QRpcMessageDecoder extends LengthFieldBasedFrameDecoder {
-
-    public QRpcMessageDecoder() {
+public class QRpcResponseDecoder extends LengthFieldBasedFrameDecoder {
+    public QRpcResponseDecoder() {
         //找到具体报文payload的具体位置,截取出来进行解析
         super(
                 MessageFormatConstant.MAX_FRAME_LENGTH,//最大帧产固定
@@ -75,8 +72,8 @@ public class QRpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         //4.解析总长度
         int full_length = byteBuf.readInt();
 
-        //5.解析请求类型 todo 判断是否是心跳检测
-        byte requestType = byteBuf.readByte();
+        //5.解析响应码
+        byte responseCode = byteBuf.readByte();
 
         //6.解析序列化类型
         byte serializeType = byteBuf.readByte();
@@ -88,39 +85,44 @@ public class QRpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         long requestId = byteBuf.readLong();
 
         //将解析后的报文封装成QRpcRequest对象 todo 心跳请求没有负载payload直接返回
-        QRpcRequest qRpcRequest = QRpcRequest.builder()
+        QRpcResponse qRpcResponse = QRpcResponse.builder()
                 .requestId(requestId)
-                .requestType(requestType)
+                .code(responseCode)
                 .serializeType(serializeType)
                 .compressType(compressType)
                 .build();
 
-        if (requestType == RequestType.HEART_DANCE.getId()) {
-            return qRpcRequest;
-        }
+        //todo 心跳
+//        if (requestType == RequestType.HEART_DANCE.getId()) {
+//            return qRpcRequest;
+//        }
 
         //9.解析请求内容
         //9.1读取
-        int payloadLength = full_length - header_length;
-        byte[] payload = new byte[payloadLength];
-        byteBuf.readBytes(payload);
+        int bodyLength = full_length - header_length;
+        byte[] bodyArr = new byte[bodyLength];
+        byteBuf.readBytes(bodyArr);
 
         //9.2解压缩
 
         //9.3反序列化
         try (
                 //自动关流
-                ByteArrayInputStream bais = new ByteArrayInputStream(payload);
+                ByteArrayInputStream bais = new ByteArrayInputStream(bodyArr);
                 ObjectInputStream ois = new ObjectInputStream(bais);
         ) {
-            RequestPayload requestPayload = (RequestPayload) ois.readObject();
+            Object body = ois.readObject();
             //封装
-            qRpcRequest.setRequestPayload(requestPayload);
+            qRpcResponse.setBody(body);
         } catch (IOException | ClassNotFoundException e) {
-            log.error("请求【{}】反序列化时发送了异常", requestId, e);
+            log.error("响应【{}】反序列化时发送了异常", requestId, e);
             throw new RuntimeException(e);
         }
 
-        return qRpcRequest;
+        if (log.isDebugEnabled()) {
+            log.debug("响应【{}】已经在服务调用方，完成报文的解码工作", qRpcResponse.getRequestId());
+        }
+
+        return qRpcResponse;
     }
 }

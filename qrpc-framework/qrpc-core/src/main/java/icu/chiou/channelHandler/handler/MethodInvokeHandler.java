@@ -2,7 +2,9 @@ package icu.chiou.channelHandler.handler;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.ServiceConfig;
+import icu.chiou.enumeration.ResponseCode;
 import icu.chiou.transport.message.QRpcRequest;
+import icu.chiou.transport.message.QRpcResponse;
 import icu.chiou.transport.message.RequestPayload;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -24,12 +26,22 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
         RequestPayload payload = msg.getRequestPayload();
 
         //2.根据负载内容进行方法调用
-        Object obj = invokeTargetMethod(payload);
-
+        Object result = invokeTargetMethod(payload);
+        //日志记录
+        if (log.isDebugEnabled()) {
+            log.debug("请求【{}】已经在服务端完成方法的调用", msg.getRequestId());
+        }
         //3.封装响应
+        QRpcResponse qRpcResponse = QRpcResponse.builder()
+                .requestId(msg.getRequestId())
+                .compressType(msg.getCompressType())
+                .serializeType(msg.getSerializeType())
+                .code(ResponseCode.SUCCESS.getCode())
+                .body(result)
+                .build();
 
         //4.写出响应
-
+        ctx.channel().writeAndFlush(qRpcResponse);
     }
 
     /**

@@ -16,7 +16,7 @@ import java.io.ObjectOutputStream;
 /**
  * Author: chiou
  * createTime: 2023/7/26
- * Description: 出战时，第一个经过的处理器
+ * Description: 请求的编码器-出战时，第一个经过的处理器
  * 报文结构:
  * 4byte = magic -- 魔数值 -- qrpc
  * 1byte = version
@@ -39,7 +39,7 @@ import java.io.ObjectOutputStream;
  *  *  * </pre>
  */
 @Slf4j
-public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
+public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, QRpcRequest msg, ByteBuf out) throws Exception {
@@ -60,6 +60,7 @@ public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
         out.writeByte(msg.getSerializeType());
         //请求id
         out.writeLong(msg.getRequestId());
+        //心跳类型的响应
         if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
             //重新处理报文长度 再写上4个 full length
             int currIndex = out.writerIndex();//保存当前写指针位置
@@ -68,7 +69,6 @@ public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
             out.writeInt(MessageFormatConstant.HEADER_LENGTH_VALUE);
             //归位写指针
             out.writerIndex(currIndex);
-            return;
         } else {
             //请求体
             byte[] body = getBodyBytes(msg.getRequestPayload());
@@ -80,6 +80,10 @@ public class QRpcMessageEncoder extends MessageToByteEncoder<QRpcRequest> {
             out.writeInt(body.length + MessageFormatConstant.HEADER_LENGTH_VALUE);
             //归位写指针
             out.writerIndex(currIndex);
+        }
+        //日志记录
+        if (log.isDebugEnabled()) {
+            log.debug("请求【{}】已在服务调用方，完成报文的编码的工作", msg.getRequestId());
         }
     }
 
