@@ -1,5 +1,8 @@
 package icu.chiou.channelHandler.handler.encoder;
 
+import icu.chiou.QRpcBootstrap;
+import icu.chiou.compress.Compressor;
+import icu.chiou.compress.CompressorFactory;
 import icu.chiou.constants.MessageFormatConstant;
 import icu.chiou.serialize.Serializer;
 import icu.chiou.serialize.SerializerFactory;
@@ -40,7 +43,7 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         //首部长度
         out.writeShort(MessageFormatConstant.HEADER_LENGTH_VALUE);
         //报文长度
-        //todo 还不确定先跳过4个位置
+        //还不确定先跳过4个位置
         out.writeInt(out.writerIndex() + MessageFormatConstant.FULL_LENGTH_LENGTH);
         //类型
         out.writeByte(msg.getCode());
@@ -56,7 +59,9 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         //byte[] body = getBodyBytes(msg.getBody());
         byte[] body = serializer.serialize(msg.getBody());
 
-        //todo 压缩
+        //压缩
+        Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+        body = compressor.compress(body);
 
         if (body != null) {
             out.writeBytes(body);
@@ -76,7 +81,6 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
     }
 
     private byte[] getBodyBytes(Object object) {
-        //todo 此处序列化太固定，而且还没开始写压缩
         if (object == null) {
             return null;
         }

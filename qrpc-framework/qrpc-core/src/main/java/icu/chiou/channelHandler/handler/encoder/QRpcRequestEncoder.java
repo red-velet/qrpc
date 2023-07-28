@@ -1,6 +1,8 @@
 package icu.chiou.channelHandler.handler.encoder;
 
 import icu.chiou.QRpcBootstrap;
+import icu.chiou.compress.Compressor;
+import icu.chiou.compress.CompressorFactory;
 import icu.chiou.constants.MessageFormatConstant;
 import icu.chiou.enumeration.RequestType;
 import icu.chiou.serialize.Serializer;
@@ -73,12 +75,15 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
             //归位写指针
             out.writerIndex(currIndex);
         } else {
-            //todo 根据配置进行序列化
+            //根据配置进行序列化
             Serializer serializer = SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getSerializer();
-            //todo 根据配置进行压缩
             //请求体
             //byte[] body = getBodyBytes(msg.getRequestPayload());
             byte[] body = serializer.serialize(msg.getRequestPayload());
+            //根据配置进行压缩
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+            body = compressor.compress(body);
+
             out.writeBytes(body);
             //重新处理报文长度 再写上4个 full length
             int currIndex = out.writerIndex();//保存当前写指针位置

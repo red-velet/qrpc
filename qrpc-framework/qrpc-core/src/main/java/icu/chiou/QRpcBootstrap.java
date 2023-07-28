@@ -48,6 +48,8 @@ public class QRpcBootstrap {
 
     //默认的序列化类型配置项
     public static String SERIALIZE_TYPE = "jdk";
+    //默认的压缩类型配置项
+    public static String COMPRESS_TYPE = "gzip";
 
     //维护已经且发布的服务列表
     public final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
@@ -219,6 +221,16 @@ public class QRpcBootstrap {
         }
         if (log.isDebugEnabled()) {
             log.debug("配置了使用序列化的方式为【{}】", SERIALIZE_TYPE);
+        }
+        return this;
+    }
+
+    public QRpcBootstrap compress(String compressType) {
+        if (compressType != null) {
+            COMPRESS_TYPE = compressType;
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("配置了使用压缩的算法为【{}】", COMPRESS_TYPE);
         }
         return this;
     }

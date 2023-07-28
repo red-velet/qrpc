@@ -2,6 +2,7 @@ package icu.chiou.proxy.handler;
 
 import icu.chiou.NettyBootstrapInitializer;
 import icu.chiou.QRpcBootstrap;
+import icu.chiou.compress.CompressorFactory;
 import icu.chiou.discovery.Registry;
 import icu.chiou.enumeration.RequestType;
 import icu.chiou.exceptions.DiscoveryException;
@@ -73,7 +74,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .requestId(QRpcBootstrap.ID_GENERATOR.generateId())
                 .requestType(RequestType.REQUEST.getId())
                 .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getCode())
-                .compressType((byte) 1)
+                .compressType(CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCode())
                 .requestPayload(requestPayload)
                 .build();
 

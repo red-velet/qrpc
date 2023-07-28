@@ -30,16 +30,16 @@ public class HessianSerializer implements Serializer {
             hessian2Output.writeObject(object);
             hessian2Output.flush();
             if (log.isDebugEnabled()) {
-                log.debug("请求报文内对象【{}】,使用hessian方式成功完成了序列化操作", object);
+                log.debug("请求报文内对象【{}】,使用hessian方式成功完成了【序列化】操作", object);
             }
             byte[] bytes = baos.toByteArray();
             if (log.isDebugEnabled()) {
-                log.debug("使用hessian方式成功完成序列化操作后的数组长度:{}", bytes.length);
+                log.debug("使用hessian方式成功完成【序列化】操作后的数组长度:{}", bytes.length);
             }
             return bytes;
         } catch (IOException e) {
             log.error("序列化对象【{}】时出现异常:", object, e);
-            throw new SerializeException("hessian序列化时出现异常");
+            throw new SerializeException("hessian【序列化】时出现异常");
         }
 
     }
@@ -55,12 +55,12 @@ public class HessianSerializer implements Serializer {
             Hessian2Input hessianInput = new Hessian2Input(bais);
             T t = (T) hessianInput.readObject();
             if (log.isDebugEnabled()) {
-                log.debug("响应报文内对象【{}】,使用hessian方式成功完成了反序列化操作", clazz);
+                log.debug("响应报文内对象【{}】,使用hessian方式成功完成了【反序列化】操作", clazz);
             }
             return t;
         } catch (IOException e) {
             log.error("反序列化对象【{}】时出现异常:", clazz, e);
-            throw new SerializeException("hessian序列化时出现异常");
+            throw new SerializeException("hessian【反序列化】时出现异常");
         }
     }
 }

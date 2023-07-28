@@ -6,9 +6,9 @@ package icu.chiou.serialize;
  * Description: 抽象的序列化器,规定序列化器的行为
  */
 public interface Serializer {
-    
+
     /**
-     * 序列化的方法
+     * 序列化的方法:把对象序列化成字节数组
      *
      * @param object 待序列化的对象
      * @return 序列化化后的字节数组
@@ -17,7 +17,7 @@ public interface Serializer {
 
 
     /**
-     * 反序列化的方法
+     * 反序列化的方法:把字节数组反序列化成对象
      *
      * @param bytes 待反序列化的字节数组
      * @param clazz 目标类的Class对象

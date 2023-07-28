@@ -1,5 +1,8 @@
 package icu.chiou.channelHandler.handler.decoder;
 
+import icu.chiou.QRpcBootstrap;
+import icu.chiou.compress.Compressor;
+import icu.chiou.compress.CompressorFactory;
 import icu.chiou.constants.MessageFormatConstant;
 import icu.chiou.serialize.Serializer;
 import icu.chiou.serialize.SerializerFactory;
@@ -102,11 +105,14 @@ public class QRpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         byteBuf.readBytes(bodyArr);
 
         //9.2解压缩
-        //todo 解压缩
+        //解压缩
+        Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+        bodyArr = compressor.decompress(bodyArr);
 
         //9.3反序列化
         Serializer serializer = SerializerFactory.getSerializer(qRpcResponse.getSerializeType()).getSerializer();
         Object body = serializer.deserialize(bodyArr, Object.class);
+
         //封装
         qRpcResponse.setBody(body);
 

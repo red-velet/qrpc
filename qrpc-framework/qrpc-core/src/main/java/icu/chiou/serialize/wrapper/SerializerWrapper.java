@@ -7,7 +7,7 @@ import lombok.Getter;
 /**
  * Author: chiou
  * createTime: 2023/7/28
- * Description: No Description
+ * Description: 序列化器的包装类
  */
 @AllArgsConstructor
 @Getter

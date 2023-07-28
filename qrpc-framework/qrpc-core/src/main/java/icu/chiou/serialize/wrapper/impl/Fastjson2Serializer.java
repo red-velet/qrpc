@@ -23,15 +23,15 @@ public class Fastjson2Serializer implements Serializer {
         try {
             byte[] bytes = JSON.toJSONBytes(object);
             if (log.isDebugEnabled()) {
-                log.debug("请求报文内对象【{}】,使用fastjson方式成功完成了序列化操作", object);
+                log.debug("请求报文内对象【{}】,使用fastjson2方式成功完成了【序列化】操作", object);
             }
             if (log.isDebugEnabled()) {
-                log.debug("使用hessian方式成功完成序列化操作后的数组长度:{}", bytes.length);
+                log.debug("使用fastjson2方式成功完成【序列化】操作后的数组长度:{}", bytes.length);
             }
             return bytes;
         } catch (RuntimeException e) {
             log.error("序列化对象【{}】时出现异常:", object, e);
-            throw new SerializeException("fastjson序列化时出现异常");
+            throw new SerializeException("fastjson2【序列化】时出现异常");
         }
 
     }
@@ -45,12 +45,12 @@ public class Fastjson2Serializer implements Serializer {
         try {
             Object object = JSON.parseObject(bytes, clazz, JSONReader.Feature.SupportClassForName);
             if (log.isDebugEnabled()) {
-                log.debug("响应报文内对象【{}】,使用fastjson方式成功完成了反序列化操作", clazz);
+                log.debug("响应报文内对象【{}】,使用fastjson方式成功完成了【反序列化】操作", clazz);
             }
             return (T) object;
         } catch (RuntimeException e) {
             log.error("反序列化对象【{}】时出现异常:", clazz, e);
-            throw new SerializeException("fastjson序列化时出现异常");
+            throw new SerializeException("fastjson【反序列化】时出现异常");
         }
     }
 
