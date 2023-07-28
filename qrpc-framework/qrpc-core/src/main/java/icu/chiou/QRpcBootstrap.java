@@ -1,8 +1,8 @@
 package icu.chiou;
 
 import icu.chiou.channelHandler.handler.MethodInvokeHandler;
-import icu.chiou.channelHandler.handler.QRpcRequestDecoder;
-import icu.chiou.channelHandler.handler.QRpcResponseEncoder;
+import icu.chiou.channelHandler.handler.decoder.QRpcRequestDecoder;
+import icu.chiou.channelHandler.handler.encoder.QRpcResponseEncoder;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
@@ -45,6 +45,9 @@ public class QRpcBootstrap {
 
     //端口
     private int port = 8088;
+
+    //默认的序列化类型配置项
+    public static String SERIALIZE_TYPE = "jdk";
 
     //维护已经且发布的服务列表
     public final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
@@ -207,6 +210,16 @@ public class QRpcBootstrap {
         //在这个方法里我们是否可以拿到相关的配置项: 如注册中心
         //配置reference,便于后面调用get方法时,生成代理对象
         reference.setRegistry(registry);
+        return this;
+    }
+
+    public QRpcBootstrap serialize(String serializeType) {
+        if (serializeType != null) {
+            SERIALIZE_TYPE = serializeType;
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("配置了使用序列化的方式为【{}】", SERIALIZE_TYPE);
+        }
         return this;
     }
 

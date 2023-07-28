@@ -1,8 +1,8 @@
 package icu.chiou.channelHandler;
 
 import icu.chiou.channelHandler.handler.MySimpleChannelInboundHandler;
-import icu.chiou.channelHandler.handler.QRpcRequestEncoder;
-import icu.chiou.channelHandler.handler.QRpcResponseDecoder;
+import icu.chiou.channelHandler.handler.decoder.QRpcResponseDecoder;
+import icu.chiou.channelHandler.handler.encoder.QRpcRequestEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LogLevel;

@@ -1,7 +1,10 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelHandler.handler.encoder;
 
+import icu.chiou.QRpcBootstrap;
 import icu.chiou.constants.MessageFormatConstant;
 import icu.chiou.enumeration.RequestType;
+import icu.chiou.serialize.Serializer;
+import icu.chiou.serialize.SerializerFactory;
 import icu.chiou.transport.message.QRpcRequest;
 import icu.chiou.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
@@ -56,8 +59,8 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
         out.writeInt(out.writerIndex() + MessageFormatConstant.FULL_LENGTH_LENGTH);
         //类型
         out.writeByte(msg.getRequestType());
-        out.writeByte(msg.getCompressType());
         out.writeByte(msg.getSerializeType());
+        out.writeByte(msg.getCompressType());
         //请求id
         out.writeLong(msg.getRequestId());
         //心跳类型的响应
@@ -70,8 +73,12 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
             //归位写指针
             out.writerIndex(currIndex);
         } else {
+            //todo 根据配置进行序列化
+            Serializer serializer = SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getSerializer();
+            //todo 根据配置进行压缩
             //请求体
-            byte[] body = getBodyBytes(msg.getRequestPayload());
+            //byte[] body = getBodyBytes(msg.getRequestPayload());
+            byte[] body = serializer.serialize(msg.getRequestPayload());
             out.writeBytes(body);
             //重新处理报文长度 再写上4个 full length
             int currIndex = out.writerIndex();//保存当前写指针位置
@@ -88,7 +95,6 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
     }
 
     private byte[] getBodyBytes(RequestPayload payload) {
-        //todo 此处序列化太固定，而且还没开始写压缩
         //使用java序列化对象
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {

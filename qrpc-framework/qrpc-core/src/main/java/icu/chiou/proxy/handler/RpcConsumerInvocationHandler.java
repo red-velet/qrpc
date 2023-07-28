@@ -6,6 +6,7 @@ import icu.chiou.discovery.Registry;
 import icu.chiou.enumeration.RequestType;
 import icu.chiou.exceptions.DiscoveryException;
 import icu.chiou.exceptions.NetworkException;
+import icu.chiou.serialize.SerializerFactory;
 import icu.chiou.transport.message.QRpcRequest;
 import icu.chiou.transport.message.RequestPayload;
 import io.netty.channel.Channel;
@@ -71,7 +72,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         QRpcRequest qRpcRequest = QRpcRequest.builder()
                 .requestId(QRpcBootstrap.ID_GENERATOR.generateId())
                 .requestType(RequestType.REQUEST.getId())
-                .serializeType((byte) 1)
+                .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getCode())
                 .compressType((byte) 1)
                 .requestPayload(requestPayload)
                 .build();

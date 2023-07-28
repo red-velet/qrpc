@@ -1,17 +1,15 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelHandler.handler.decoder;
 
 import icu.chiou.constants.MessageFormatConstant;
 import icu.chiou.enumeration.RequestType;
+import icu.chiou.serialize.Serializer;
+import icu.chiou.serialize.SerializerFactory;
 import icu.chiou.transport.message.QRpcRequest;
 import icu.chiou.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 
 /**
  * Author: chiou
@@ -108,18 +106,11 @@ public class QRpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         //9.2解压缩
 
         //9.3反序列化
-        try (
-                //自动关流
-                ByteArrayInputStream bais = new ByteArrayInputStream(payload);
-                ObjectInputStream ois = new ObjectInputStream(bais);
-        ) {
-            RequestPayload requestPayload = (RequestPayload) ois.readObject();
-            //封装
-            qRpcRequest.setRequestPayload(requestPayload);
-        } catch (IOException | ClassNotFoundException e) {
-            log.error("请求【{}】反序列化时发送了异常", requestId, e);
-            throw new RuntimeException(e);
-        }
+        //todo 反序列化
+        Serializer serializer = SerializerFactory.getSerializer(qRpcRequest.getSerializeType()).getSerializer();
+        RequestPayload requestPayload = serializer.deserialize(payload, RequestPayload.class);
+        qRpcRequest.setRequestPayload(requestPayload);
+
 
         //日志记录
         if (log.isDebugEnabled()) {

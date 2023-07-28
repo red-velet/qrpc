@@ -34,8 +34,8 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
         //3.封装响应
         QRpcResponse qRpcResponse = QRpcResponse.builder()
                 .requestId(msg.getRequestId())
-                .compressType(msg.getCompressType())
                 .serializeType(msg.getSerializeType())
+                .compressType(msg.getCompressType())
                 .code(ResponseCode.SUCCESS.getCode())
                 .body(result)
                 .build();

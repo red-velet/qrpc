@@ -1,6 +1,8 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelHandler.handler.encoder;
 
 import icu.chiou.constants.MessageFormatConstant;
+import icu.chiou.serialize.Serializer;
+import icu.chiou.serialize.SerializerFactory;
 import icu.chiou.transport.message.QRpcResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -42,13 +44,20 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         out.writeInt(out.writerIndex() + MessageFormatConstant.FULL_LENGTH_LENGTH);
         //类型
         out.writeByte(msg.getCode());
-        out.writeByte(msg.getCompressType());
+        //序列化
         out.writeByte(msg.getSerializeType());
+        //压缩
+        out.writeByte(msg.getCompressType());
         //请求id
         out.writeLong(msg.getRequestId());
 
-        //
-        byte[] body = getBodyBytes(msg.getBody());
+        //对响应做序列化
+        Serializer serializer = SerializerFactory.getSerializer(msg.getSerializeType()).getSerializer();
+        //byte[] body = getBodyBytes(msg.getBody());
+        byte[] body = serializer.serialize(msg.getBody());
+
+        //todo 压缩
+
         if (body != null) {
             out.writeBytes(body);
         }

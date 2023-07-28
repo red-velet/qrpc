@@ -1,15 +1,13 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelHandler.handler.decoder;
 
 import icu.chiou.constants.MessageFormatConstant;
+import icu.chiou.serialize.Serializer;
+import icu.chiou.serialize.SerializerFactory;
 import icu.chiou.transport.message.QRpcResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 
 /**
  * Author: chiou
@@ -104,20 +102,13 @@ public class QRpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         byteBuf.readBytes(bodyArr);
 
         //9.2解压缩
+        //todo 解压缩
 
         //9.3反序列化
-        try (
-                //自动关流
-                ByteArrayInputStream bais = new ByteArrayInputStream(bodyArr);
-                ObjectInputStream ois = new ObjectInputStream(bais);
-        ) {
-            Object body = ois.readObject();
-            //封装
-            qRpcResponse.setBody(body);
-        } catch (IOException | ClassNotFoundException e) {
-            log.error("响应【{}】反序列化时发送了异常", requestId, e);
-            throw new RuntimeException(e);
-        }
+        Serializer serializer = SerializerFactory.getSerializer(qRpcResponse.getSerializeType()).getSerializer();
+        Object body = serializer.deserialize(bodyArr, Object.class);
+        //封装
+        qRpcResponse.setBody(body);
 
         if (log.isDebugEnabled()) {
             log.debug("响应【{}】已经在服务调用方，完成报文的解码工作", qRpcResponse.getRequestId());

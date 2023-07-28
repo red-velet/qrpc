@@ -25,6 +25,7 @@ public class ConsumerApplication {
         QRpcBootstrap.getInstance()
                 .application("first-qrpc-consumer")
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
+                .serialize("jdk")
                 .reference(reference);
 
 
