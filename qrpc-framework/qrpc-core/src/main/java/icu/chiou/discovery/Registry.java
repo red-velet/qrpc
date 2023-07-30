@@ -3,6 +3,7 @@ package icu.chiou.discovery;
 import icu.chiou.ServiceConfig;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Author: chiou
@@ -23,5 +24,5 @@ public interface Registry {
      * @param serviceName 服务的名称
      * @return 服务的地址(ip + 端口)
      */
-    InetSocketAddress lookup(String serviceName);
+    List<InetSocketAddress> lookup(String serviceName);
 }

@@ -1,4 +1,4 @@
-package icu.chiou.channelHandler.handler.encoder;
+package icu.chiou.channelhandler.handler.encoder;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.compress.Compressor;
@@ -65,7 +65,8 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
         out.writeByte(msg.getCompressType());
         //请求id
         out.writeLong(msg.getRequestId());
-        //心跳类型的响应
+
+        //心跳类型的请求
         if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
             //重新处理报文长度 再写上4个 full length
             int currIndex = out.writerIndex();//保存当前写指针位置

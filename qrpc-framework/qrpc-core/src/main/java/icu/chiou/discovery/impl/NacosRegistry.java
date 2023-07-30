@@ -11,6 +11,7 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Author: chiou
@@ -20,14 +21,14 @@ import java.net.InetSocketAddress;
 @Slf4j
 public class NacosRegistry extends AbstractRegistry {
 
-    private ZooKeeper zooKeeper;
+    private ZooKeeper nacos;
 
     public NacosRegistry() {
-        zooKeeper = ZookeeperUtil.createZookeeper();
+        nacos = ZookeeperUtil.createZookeeper();
     }
 
     public NacosRegistry(String connectString, int timeOut) {
-        this.zooKeeper = ZookeeperUtil.createZookeeper(connectString, timeOut);
+        this.nacos = ZookeeperUtil.createZookeeper(connectString, timeOut);
     }
 
     @Override
@@ -35,20 +36,20 @@ public class NacosRegistry extends AbstractRegistry {
         //获取当前待发布服务的节点名
         String nodePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceConfig.getInterface().getName();
         //该节点为持久节点
-        if (!ZookeeperUtil.exist(zooKeeper, nodePath, null)) {
+        if (!ZookeeperUtil.exist(nacos, nodePath, null)) {
             //1.创建服务持久节点
             ZookeeperNode node = new ZookeeperNode(nodePath, null);
-            ZookeeperUtil.createNode(zooKeeper, node, null, CreateMode.PERSISTENT);
+            ZookeeperUtil.createNode(nacos, node, null, CreateMode.PERSISTENT);
         }
         //2.创建主机节点 ip:port
         //服务提供方的端口一般自己设定
         //但是ip应该设置为局域网ip
         //todo 后续处理端口问题
         String needRegisterNodePath = nodePath + "/" + NetUtil.getIp() + ":" + "8088";
-        if (!ZookeeperUtil.exist(zooKeeper, needRegisterNodePath, null)) {
+        if (!ZookeeperUtil.exist(nacos, needRegisterNodePath, null)) {
             //创建持久节点
             ZookeeperNode node = new ZookeeperNode(needRegisterNodePath, null);
-            ZookeeperUtil.createNode(zooKeeper, node, null, CreateMode.EPHEMERAL);
+            ZookeeperUtil.createNode(nacos, node, null, CreateMode.EPHEMERAL);
         }
 
         if (log.isDebugEnabled()) {
@@ -57,7 +58,7 @@ public class NacosRegistry extends AbstractRegistry {
     }
 
     @Override
-    public InetSocketAddress lookup(String serviceName) {
+    public List<InetSocketAddress> lookup(String serviceName) {
         return null;
     }
 }

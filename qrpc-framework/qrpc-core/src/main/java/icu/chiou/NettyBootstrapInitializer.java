@@ -1,6 +1,6 @@
 package icu.chiou;
 
-import icu.chiou.channelHandler.ConsumerChannelInitializer;
+import icu.chiou.channelhandler.ConsumerChannelInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;

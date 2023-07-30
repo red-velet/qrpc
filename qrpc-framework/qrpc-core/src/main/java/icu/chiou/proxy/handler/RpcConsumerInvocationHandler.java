@@ -47,21 +47,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         log.info("进入代理对象->methodName -> {}", method.getName());
         log.info("进入代理对象->method args -> {}", args);
-        //1.发现服务-从注册中心寻找可用服务
-        //todo 每次调用该方法都需要去注册中心拉取服务列表吗?
-        //     如何选择一个合适的服务,而不是只选择第一个?
-        InetSocketAddress address = registry.lookup(interfaceRef.getName());
-        if (log.isDebugEnabled()) {
-            log.debug("服务调用方发现了服务【{}】的可用主机【{}】", interfaceRef.getName(), address);
-        }
-        //2.尝试获取可用通道
-        Channel channel = getAvaiableChannel(address);
-        if (log.isDebugEnabled()) {
-            log.debug("获取了和【{}】建立的连接通道", address);
-        }
-
-        //3.封装报文
-        //todo 封装报文
+        //1.封装报文
         RequestPayload requestPayload = RequestPayload.builder()
                 .interfaceName(interfaceRef.getName())
                 .methodName(method.getName())
@@ -78,46 +64,38 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .requestPayload(requestPayload)
                 .build();
 
-        //调用方法,返回结果
-        /*
-         * -------------------------同步策略 -------------------------
-         */
-//                ChannelFuture channelFuture = channel.writeAndFlush(new Object()).await();
-//                if (channelFuture.isDone()) {
-//                    Object result = channelFuture.getNow();
-//                } else if (!channelFuture.isSuccess()) {
-//                    //捕获子线程-异步任务中的异常
-//                    Throwable throwable = channelFuture.cause();
-//                    throw new RuntimeException(throwable);
-//                }
-        /*
-         * -------------------------同步策略 -------------------------
-         */
+        //将请求存入本地线程,需要在合适的时候调用remove方法
+        QRpcBootstrap.REQUEST_THREAD_LOCAL.set(qRpcRequest);
 
-        /*
-         * -------------------------异步策略 -------------------------
-         */
+        //2.发现服务-从注册中心寻找可用服务,拉取服务列表,并通过客户端负载均衡器寻找一个可用的服务
+
+        InetSocketAddress address = QRpcBootstrap.LOAD_BALANCE.selectAvailableService(interfaceRef.getName());
+
+
+        if (log.isDebugEnabled()) {
+            log.debug("服务调用方发现了服务【{}】的可用主机【{}】", interfaceRef.getName(), address);
+        }
+
+        //3.尝试获取可用通道
+        Channel channel = getAvaiableChannel(address);
+        if (log.isDebugEnabled()) {
+            log.debug("获取了和【{}】建立的连接通道", address);
+        }
+
         //4.写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         //将completableFuture暴露出去
-        QRpcBootstrap.PENDING_REQUEST.put(1L, completableFuture);
+        QRpcBootstrap.PENDING_REQUEST.put(qRpcRequest.getRequestId(), completableFuture);
         //这里直接写出了请求：请求的实例会直接进入pipeline执行出站的一系列操作
         channel.writeAndFlush(qRpcRequest).addListener((ChannelFutureListener) promise -> {
-            //当前promise将来返回的结果是什么？ -》 writeAndFlush写出的结果
-            //但是我们需要获取的服务提供方的响应，那才是需要的结果，所以此处只需要处理异常即可
-            //所以我们需要在此次将completableFuture挂起，等将来服务提供方响应后再获取
-//                    if (promise.isDone()) {
-//                        if (log.isDebugEnabled()) {
-//                            log.debug("来自服务消费者->completableFuture->promise数据已经写出去了");
-//                        }
-//                        completableFuture.complete(promise.getNow());
-//                    }
             if (!promise.isSuccess()) {
                 completableFuture.completeExceptionally(promise.cause());
             }
         });
-        //此处阻塞，会等待get执行
-        //如果还没用执行完成，我们就在pipeline的handler执行调用返回结果
+
+        //清理ThreadLocal
+        QRpcBootstrap.REQUEST_THREAD_LOCAL.remove();
+
         //5.获得响应的结果
         return completableFuture.get(10, TimeUnit.SECONDS);
     }

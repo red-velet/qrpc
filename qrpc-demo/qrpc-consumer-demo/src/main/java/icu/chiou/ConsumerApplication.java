@@ -30,9 +30,19 @@ public class ConsumerApplication {
                 .reference(reference);
 
 
+//        try {
+//            Thread.sleep(5000);
+//            log.info("-----------------------------------------------------------------------------------");
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+
         //获取代理对象
-        HelloQRpc helloQRpc = reference.get();
-        String love = helloQRpc.say("i love you");
-        log.info("return is {}", love);
+        for (int i = 0; i < 10; i++) {
+            HelloQRpc helloQRpc = reference.get();
+            String love = helloQRpc.say("i love you");
+            log.info("return is {}", love);
+        }
+
     }
 }

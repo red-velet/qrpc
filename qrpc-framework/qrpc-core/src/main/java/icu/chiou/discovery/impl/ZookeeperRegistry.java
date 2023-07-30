@@ -1,5 +1,6 @@
 package icu.chiou.discovery.impl;
 
+import icu.chiou.QRpcBootstrap;
 import icu.chiou.ServiceConfig;
 import icu.chiou.constants.Constant;
 import icu.chiou.discovery.AbstractRegistry;
@@ -47,7 +48,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         //服务提供方的端口一般自己设定
         //但是ip应该设置为局域网ip
         //todo 后续处理端口问题
-        String needRegisterNodePath = nodePath + "/" + NetUtil.getIp() + ":" + "8088";
+        String needRegisterNodePath = nodePath + "/" + NetUtil.getIp() + ":" + QRpcBootstrap.PORT;
         if (!ZookeeperUtil.exist(zooKeeper, needRegisterNodePath, null)) {
             //创建持久节点
             ZookeeperNode node = new ZookeeperNode(needRegisterNodePath, null);
@@ -60,7 +61,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
     }
 
     @Override
-    public InetSocketAddress lookup(String serviceName) {
+    public List<InetSocketAddress> lookup(String serviceName) {
         //1.找到服务对应的节点
         String serviceNodePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName;
         List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, null);
@@ -76,6 +77,6 @@ public class ZookeeperRegistry extends AbstractRegistry {
             throw new DiscoveryException("没有发现可用服务列表");
         }
 
-        return collect.get(0);
+        return collect;
     }
 }

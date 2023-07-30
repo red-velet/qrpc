@@ -1,4 +1,4 @@
-package icu.chiou.channelHandler.handler.encoder;
+package icu.chiou.channelhandler.handler.encoder;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.compress.Compressor;
@@ -34,7 +34,7 @@ import java.io.ObjectOutputStream;
 @Slf4j
 public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
     @Override
-    protected void encode(ChannelHandlerContext ctx, QRpcResponse msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, QRpcResponse qRpcResponse, ByteBuf out) throws Exception {
         //封装报文
         //魔术值 4个字节
         out.writeBytes(MessageFormatConstant.MAGIC_VALUE);
@@ -46,22 +46,25 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         //还不确定先跳过4个位置
         out.writeInt(out.writerIndex() + MessageFormatConstant.FULL_LENGTH_LENGTH);
         //类型
-        out.writeByte(msg.getCode());
+        out.writeByte(qRpcResponse.getCode());
         //序列化
-        out.writeByte(msg.getSerializeType());
+        out.writeByte(qRpcResponse.getSerializeType());
         //压缩
-        out.writeByte(msg.getCompressType());
+        out.writeByte(qRpcResponse.getCompressType());
         //请求id
-        out.writeLong(msg.getRequestId());
+        out.writeLong(qRpcResponse.getRequestId());
 
-        //对响应做序列化
-        Serializer serializer = SerializerFactory.getSerializer(msg.getSerializeType()).getSerializer();
-        //byte[] body = getBodyBytes(msg.getBody());
-        byte[] body = serializer.serialize(msg.getBody());
+        byte[] body = null;
+        if (qRpcResponse.getBody() != null) {
+            //对响应做序列化
+            Serializer serializer = SerializerFactory.getSerializer(qRpcResponse.getSerializeType()).getSerializer();
+            //byte[] body = getBodyBytes(qRpcResponse.getBody());
+            body = serializer.serialize(qRpcResponse.getBody());
 
-        //压缩
-        Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
-        body = compressor.compress(body);
+            //压缩
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+            body = compressor.compress(body);
+        }
 
         if (body != null) {
             out.writeBytes(body);
@@ -76,7 +79,7 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         out.writerIndex(currIndex);
 
         if (log.isDebugEnabled()) {
-            log.debug("响应【{}】已在服务提供方，完成报文的编码工作", msg.getRequestId());
+            log.debug("响应【{}】已在服务提供方，完成报文的编码工作", qRpcResponse.getRequestId());
         }
     }
 

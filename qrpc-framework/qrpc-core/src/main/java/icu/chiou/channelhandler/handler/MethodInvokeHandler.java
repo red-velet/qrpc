@@ -1,7 +1,8 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelhandler.handler;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.ServiceConfig;
+import icu.chiou.enumeration.RequestType;
 import icu.chiou.enumeration.ResponseCode;
 import icu.chiou.transport.message.QRpcRequest;
 import icu.chiou.transport.message.QRpcResponse;
@@ -22,15 +23,26 @@ import java.lang.reflect.Method;
 public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, QRpcRequest msg) throws Exception {
-        //1.获取负载内容
-        RequestPayload payload = msg.getRequestPayload();
+        //Thread.sleep(20000);
+        Object result = null;
+        if (msg.getRequestType() != RequestType.HEART_DANCE.getId()) {
+            //1.获取负载内容
+            RequestPayload payload = msg.getRequestPayload();
 
-        //2.根据负载内容进行方法调用
-        Object result = invokeTargetMethod(payload);
-        //日志记录
-        if (log.isDebugEnabled()) {
-            log.debug("请求【{}】已经在服务端完成方法的调用", msg.getRequestId());
+            //2.根据负载内容进行方法调用
+            result = invokeTargetMethod(payload);
+
+            //日志记录
+            if (log.isDebugEnabled()) {
+                log.debug("请求【{}】已经在服务端完成方法的调用", msg.getRequestId());
+            }
+        } else {
+            //日志记录
+            if (log.isDebugEnabled()) {
+                log.debug("请求【{}】为心跳请求,已经在服务端接收到", msg.getRequestId());
+            }
         }
+
         //3.封装响应
         QRpcResponse qRpcResponse = QRpcResponse.builder()
                 .requestId(msg.getRequestId())

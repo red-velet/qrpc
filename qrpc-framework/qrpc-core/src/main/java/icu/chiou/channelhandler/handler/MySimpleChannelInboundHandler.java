@@ -1,4 +1,4 @@
-package icu.chiou.channelHandler.handler;
+package icu.chiou.channelhandler.handler;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.transport.message.QRpcResponse;
@@ -21,7 +21,7 @@ public class MySimpleChannelInboundHandler extends SimpleChannelInboundHandler<Q
         Object returnValue = msg.getBody();
 
         //从全局挂起的前期中获取与之匹配的、待处理的completeFuture
-        CompletableFuture<Object> completableFuture = QRpcBootstrap.PENDING_REQUEST.get(1L);
+        CompletableFuture<Object> completableFuture = QRpcBootstrap.PENDING_REQUEST.get(msg.getRequestId());
         completableFuture.complete(returnValue);
         //日志记录
         if (log.isDebugEnabled()) {

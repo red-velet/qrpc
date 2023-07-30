@@ -1,10 +1,14 @@
 package icu.chiou;
 
-import icu.chiou.channelHandler.handler.MethodInvokeHandler;
-import icu.chiou.channelHandler.handler.decoder.QRpcRequestDecoder;
-import icu.chiou.channelHandler.handler.encoder.QRpcResponseEncoder;
+import icu.chiou.channelhandler.handler.MethodInvokeHandler;
+import icu.chiou.channelhandler.handler.decoder.QRpcRequestDecoder;
+import icu.chiou.channelhandler.handler.encoder.QRpcResponseEncoder;
+import icu.chiou.core.HeartbeatDetector;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
+import icu.chiou.loadbalancer.LoadBalancer;
+import icu.chiou.loadbalancer.impl.MinimumResponseTimeLoadBalancer;
+import icu.chiou.transport.message.QRpcRequest;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -19,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,7 +49,7 @@ public class QRpcBootstrap {
     private Registry registry;
 
     //端口
-    private int port = 8088;
+    public static int PORT = 8093;
 
     //默认的序列化类型配置项
     public static String SERIALIZE_TYPE = "jdk";
@@ -56,9 +61,16 @@ public class QRpcBootstrap {
 
     //netty的连接缓存-channel
     public final static Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
+    //响应时间
+    public final static TreeMap<Long, Channel> ANSWER_TIME_CHANNEL_CACHE = new TreeMap<>();
 
     //全局被挂起的completableFuture
     public final static Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
+
+    public static LoadBalancer LOAD_BALANCE;
+
+    public static final ThreadLocal<QRpcRequest> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
+
 
     private QRpcBootstrap() {
         //构造启动程序时需要做一些初始化
@@ -91,6 +103,8 @@ public class QRpcBootstrap {
         //zooKeeper = ZookeeperUtil.createZookeeper();
         this.registry = registryConfig.getRegistry();
         this.registryConfig = registryConfig;
+        //todo 需要修改
+        QRpcBootstrap.LOAD_BALANCE = new MinimumResponseTimeLoadBalancer();
         return this;
     }
 
@@ -181,7 +195,7 @@ public class QRpcBootstrap {
                     });
 
             //3.绑定端口
-            ChannelFuture channelFuture = serverBootstrap.bind(port).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
 
             //4.获取数据
             channelFuture.channel().closeFuture().sync();
@@ -211,6 +225,8 @@ public class QRpcBootstrap {
     public QRpcBootstrap reference(ReferenceConfig<?> reference) {
         //在这个方法里我们是否可以拿到相关的配置项: 如注册中心
         //配置reference,便于后面调用get方法时,生成代理对象
+        //开启心跳检测
+        HeartbeatDetector.detectorHeaderDance(reference.getInterface().getName());
         reference.setRegistry(registry);
         return this;
     }
@@ -233,6 +249,10 @@ public class QRpcBootstrap {
             log.debug("配置了使用压缩的算法为【{}】", COMPRESS_TYPE);
         }
         return this;
+    }
+
+    public Registry getRegistry() {
+        return registry;
     }
 
     //---------------------------------服务调用方的api-------------------------------------------------
