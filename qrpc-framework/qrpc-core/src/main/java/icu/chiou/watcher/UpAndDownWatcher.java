@@ -25,7 +25,7 @@ public class UpAndDownWatcher implements Watcher {
         // 当前的阶段是否发生了变化
         if (event.getType() == Event.EventType.NodeChildrenChanged) {
             if (log.isDebugEnabled()) {
-                log.debug("检测到服务【{}】下有节点上/下线，将重新拉取服务列表...", event.getPath());
+                log.debug("⬆️⬇️检测到服务【{}】下有节点上/下线，将重新拉取服务列表...", event.getPath());
             }
             // 拉取最新的服务
             String serviceName = getServiceName(event.getPath());
