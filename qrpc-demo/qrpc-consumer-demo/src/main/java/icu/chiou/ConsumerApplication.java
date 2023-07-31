@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ConsumerApplication {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         //todo 服务消费者需要做的事情：获取具体待消费对象实例(代理对象:封装连接、获取对象)
         //reference进行代理,其中封装连接、返回对象
         ReferenceConfig<HelloQRpc> reference = new ReferenceConfig<>();
@@ -28,21 +28,26 @@ public class ConsumerApplication {
                 .serialize("json")
                 .compress("gzip")
                 .reference(reference);
+        HelloQRpc helloQRpc = reference.get();
 
-
-//        try {
-//            Thread.sleep(5000);
-//            log.info("-----------------------------------------------------------------------------------");
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-
-        //获取代理对象
-        for (int i = 0; i < 10; i++) {
-            HelloQRpc helloQRpc = reference.get();
-            String love = helloQRpc.say("i love you");
-            log.info("return is {}", love);
+        while (true) {
+            try {
+                Thread.sleep(10000);
+                log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
+                //获取代理对象
+                for (int i = 0; i < 5; i++) {
+                    String love = helloQRpc.say("i love you");
+                    log.info("❤️i love you is {}", love);
+                }
+            } catch (RuntimeException e) {
+                //throw new RuntimeException(e);
+                e.printStackTrace();
+            }
+//            //获取代理对象
+//            for (int i = 0; i < 5; i++) {
+//                String love = helloQRpc.say("i love you");
+//                log.info("❤️i love you is {}", love);
+//            }
         }
-
     }
 }

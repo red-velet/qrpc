@@ -25,6 +25,7 @@ public class RoundRobinLoadBalancer extends AbstractLoadBalancer {
         return new RoundRobinSelector(serviceList);
     }
 
+
     private static class RoundRobinSelector implements Selector {
         private List<InetSocketAddress> serviceList;
         private AtomicInteger index;

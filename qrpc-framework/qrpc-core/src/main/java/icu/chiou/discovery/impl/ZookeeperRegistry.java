@@ -8,6 +8,7 @@ import icu.chiou.exceptions.DiscoveryException;
 import icu.chiou.utils.NetUtil;
 import icu.chiou.utils.zookeeper.ZookeeperNode;
 import icu.chiou.utils.zookeeper.ZookeeperUtil;
+import icu.chiou.watcher.UpAndDownWatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooKeeper;
@@ -64,7 +65,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
     public List<InetSocketAddress> lookup(String serviceName) {
         //1.找到服务对应的节点
         String serviceNodePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName;
-        List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, null);
+        List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, new UpAndDownWatcher());
         //2.从zookeeper中获取其子节点列表
         //获取了所有可用服务列表
         List<InetSocketAddress> collect = serviceList.stream().map(ipString -> {

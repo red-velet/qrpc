@@ -1,6 +1,7 @@
 package icu.chiou.loadbalancer;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * Author: chiou
@@ -15,4 +16,12 @@ public interface LoadBalancer {
      * @return 可用服务地址
      */
     InetSocketAddress selectAvailableService(String name);
+
+    /**
+     * 当感知节点发生了动态上下线，我们需要重新进行负载均衡
+     *
+     * @param serviceName 服务的名称
+     */
+    void reloadBalance(String serviceName, List<InetSocketAddress> addresses);
+
 }

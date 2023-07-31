@@ -7,7 +7,7 @@ import icu.chiou.core.HeartbeatDetector;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import icu.chiou.loadbalancer.LoadBalancer;
-import icu.chiou.loadbalancer.impl.MinimumResponseTimeLoadBalancer;
+import icu.chiou.loadbalancer.impl.RoundRobinLoadBalancer;
 import icu.chiou.transport.message.QRpcRequest;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -49,7 +49,7 @@ public class QRpcBootstrap {
     private Registry registry;
 
     //端口
-    public static int PORT = 8093;
+    public static int PORT = 8099;
 
     //默认的序列化类型配置项
     public static String SERIALIZE_TYPE = "jdk";
@@ -99,12 +99,12 @@ public class QRpcBootstrap {
      */
     public QRpcBootstrap registry(RegistryConfig registryConfig) {
         //当前临时配置zookeeper在这里
-        //todo 尝试使用工厂方法获取注册中心
+        // 尝试使用工厂方法获取注册中心
         //zooKeeper = ZookeeperUtil.createZookeeper();
         this.registry = registryConfig.getRegistry();
         this.registryConfig = registryConfig;
         //todo 需要修改
-        QRpcBootstrap.LOAD_BALANCE = new MinimumResponseTimeLoadBalancer();
+        QRpcBootstrap.LOAD_BALANCE = new RoundRobinLoadBalancer();
         return this;
     }
 
