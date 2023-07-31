@@ -62,7 +62,7 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
             body = serializer.serialize(qRpcResponse.getBody());
 
             //压缩
-            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCompressor();
             body = compressor.compress(body);
         }
 

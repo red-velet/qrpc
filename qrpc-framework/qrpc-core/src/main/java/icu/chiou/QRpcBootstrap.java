@@ -4,11 +4,11 @@ import icu.chiou.annotation.QRpcApi;
 import icu.chiou.channelhandler.handler.MethodInvokeHandler;
 import icu.chiou.channelhandler.handler.decoder.QRpcRequestDecoder;
 import icu.chiou.channelhandler.handler.encoder.QRpcResponseEncoder;
+import icu.chiou.config.Configuration;
 import icu.chiou.core.HeartbeatDetector;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import icu.chiou.loadbalancer.LoadBalancer;
-import icu.chiou.loadbalancer.impl.RoundRobinLoadBalancer;
 import icu.chiou.transport.message.QRpcRequest;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -19,6 +19,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -39,28 +40,13 @@ import java.util.stream.Collectors;
  * Description: No Description
  */
 @Slf4j
+@Getter
 public class QRpcBootstrap {
     //QRpcBootstrap是个单例,每个应用只有一个
     private final static QRpcBootstrap BOOTSTRAP = new QRpcBootstrap();
-    //定义相关的配置
-    private String applicationName;
-    private RegistryConfig registryConfig;
-    private ProtocolConfig protocolConfig;
-    public static final IDGenerator ID_GENERATOR = new IDGenerator(1L, 1L);
 
-    //维护一个zookeeper示例
-    //private ZooKeeper zooKeeper;
-
-    //注册中心
-    private Registry registry;
-
-    //端口
-    public static int PORT = 8099;
-
-    //默认的序列化类型配置项
-    public static String SERIALIZE_TYPE = "jdk";
-    //默认的压缩类型配置项
-    public static String COMPRESS_TYPE = "gzip";
+    //全局配置中心
+    private Configuration configuration;
 
     //维护已经且发布的服务列表
     public final static Map<String, ServiceConfig<?>> SERVICE_LIST = new ConcurrentHashMap<>(16);
@@ -73,13 +59,12 @@ public class QRpcBootstrap {
     //全局被挂起的completableFuture
     public final static Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
-    public static LoadBalancer LOAD_BALANCE;
-
     public static final ThreadLocal<QRpcRequest> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
 
 
     private QRpcBootstrap() {
         //构造启动程序时需要做一些初始化
+        configuration = new Configuration();
     }
 
     public static QRpcBootstrap getInstance() {
@@ -93,7 +78,7 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap application(String applicationName) {
-        this.applicationName = applicationName;
+        configuration.setApplicationName(applicationName);
         return this;
     }
 
@@ -104,13 +89,18 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap registry(RegistryConfig registryConfig) {
-        //当前临时配置zookeeper在这里
-        // 尝试使用工厂方法获取注册中心
-        //zooKeeper = ZookeeperUtil.createZookeeper();
-        this.registry = registryConfig.getRegistry();
-        this.registryConfig = registryConfig;
-        //todo 需要修改
-        QRpcBootstrap.LOAD_BALANCE = new RoundRobinLoadBalancer();
+        configuration.setRegistryConfig(registryConfig);
+        return this;
+    }
+
+    /**
+     * 该方法用于设置负载均衡策略
+     *
+     * @param loadBalancer 负载均衡策略
+     * @return this-返回当前实例对象
+     */
+    public QRpcBootstrap loadBalancer(LoadBalancer loadBalancer) {
+        configuration.setLoadBalancer(loadBalancer);
         return this;
     }
 
@@ -121,7 +111,7 @@ public class QRpcBootstrap {
      * @return this-返回当前实例对象
      */
     public QRpcBootstrap protocol(ProtocolConfig protocolConfig) {
-        this.protocolConfig = protocolConfig;
+        configuration.setProtocolConfig(protocolConfig);
         if (log.isDebugEnabled()) {
             log.debug("当前工程使用了【{}】协议进行序列化", protocolConfig.toString());
         }
@@ -140,7 +130,7 @@ public class QRpcBootstrap {
     public QRpcBootstrap publish(ServiceConfig<?> service) {
         //抽象了注册中心的概念
         //把服务发布到注册中心
-        registry.register(service);
+        configuration.getRegistryConfig().getRegistry().register(service);
         //1.当服务调用方，通过接口、方法名、参数列表调用方法时，怎么知道是具体哪个实例的方法呢？
         //(1) new一个 (2) spring beadFactory.getBean(class) (3) 手动维护映射院系
         SERVICE_LIST.put(service.getInterface().getName(), service);
@@ -201,7 +191,7 @@ public class QRpcBootstrap {
                     });
 
             //3.绑定端口
-            ChannelFuture channelFuture = serverBootstrap.bind(PORT).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(configuration.getPort()).sync();
 
             //4.获取数据
             channelFuture.channel().closeFuture().sync();
@@ -233,32 +223,32 @@ public class QRpcBootstrap {
         //配置reference,便于后面调用get方法时,生成代理对象
         //开启心跳检测
         HeartbeatDetector.detectorHeaderDance(reference.getInterface().getName());
-        reference.setRegistry(registry);
+        reference.setRegistry(configuration.getRegistryConfig().getRegistry());
         return this;
     }
 
     public QRpcBootstrap serialize(String serializeType) {
         if (serializeType != null) {
-            SERIALIZE_TYPE = serializeType;
+            configuration.setSerializeType(serializeType);
         }
         if (log.isDebugEnabled()) {
-            log.debug("配置了使用序列化的方式为【{}】", SERIALIZE_TYPE);
+            log.debug("配置了使用序列化的方式为【{}】", configuration.getSerializeType());
         }
         return this;
     }
 
     public QRpcBootstrap compress(String compressType) {
         if (compressType != null) {
-            COMPRESS_TYPE = compressType;
+            configuration.setCompressType(compressType);
         }
         if (log.isDebugEnabled()) {
-            log.debug("配置了使用压缩的算法为【{}】", COMPRESS_TYPE);
+            log.debug("配置了使用压缩的算法为【{}】", configuration.getCompressType());
         }
         return this;
     }
 
     public Registry getRegistry() {
-        return registry;
+        return configuration.getRegistryConfig().getRegistry();
     }
 
     public QRpcBootstrap scan(String packageName) {

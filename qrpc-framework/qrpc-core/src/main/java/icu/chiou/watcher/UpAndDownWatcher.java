@@ -56,7 +56,7 @@ public class UpAndDownWatcher implements Watcher {
             }
 
             // 获得负载均衡器，进行重新的loadBalance
-            LoadBalancer loadBalancer = QRpcBootstrap.LOAD_BALANCE;
+            LoadBalancer loadBalancer = QRpcBootstrap.getInstance().getConfiguration().getLoadBalancer();
             loadBalancer.reloadBalance(serviceName, addresses);
         }
     }

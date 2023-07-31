@@ -57,10 +57,10 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .build();
 
         QRpcRequest qRpcRequest = QRpcRequest.builder()
-                .requestId(QRpcBootstrap.ID_GENERATOR.generateId())
+                .requestId(QRpcBootstrap.getInstance().getConfiguration().getIdGenerator().generateId())
                 .requestType(RequestType.REQUEST.getId())
-                .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getCode())
-                .compressType(CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCode())
+                .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
+                .compressType(CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
                 .requestPayload(requestPayload)
                 .build();
 
@@ -69,7 +69,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
         //2.发现服务-从注册中心寻找可用服务,拉取服务列表,并通过客户端负载均衡器寻找一个可用的服务
 
-        InetSocketAddress address = QRpcBootstrap.LOAD_BALANCE.selectAvailableService(interfaceRef.getName());
+        InetSocketAddress address = QRpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectAvailableService(interfaceRef.getName());
 
 
         if (log.isDebugEnabled()) {

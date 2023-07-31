@@ -49,7 +49,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         //服务提供方的端口一般自己设定
         //但是ip应该设置为局域网ip
         //todo 后续处理端口问题
-        String needRegisterNodePath = nodePath + "/" + NetUtil.getIp() + ":" + QRpcBootstrap.PORT;
+        String needRegisterNodePath = nodePath + "/" + NetUtil.getIp() + ":" + QRpcBootstrap.getInstance().getConfiguration().getPort();
         if (!ZookeeperUtil.exist(zooKeeper, needRegisterNodePath, null)) {
             //创建持久节点
             ZookeeperNode node = new ZookeeperNode(needRegisterNodePath, null);

@@ -32,7 +32,7 @@ public class ConsumerApplication {
 
         while (true) {
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
                 log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
                 //获取代理对象
                 for (int i = 0; i < 5; i++) {

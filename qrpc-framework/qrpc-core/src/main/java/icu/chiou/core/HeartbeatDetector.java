@@ -67,10 +67,10 @@ public class HeartbeatDetector {
                 while (tryTimes > 0) {
                     //发生心跳请求
                     QRpcRequest qRpcRequest = QRpcRequest.builder()
-                            .requestId(QRpcBootstrap.ID_GENERATOR.generateId())
+                            .requestId(QRpcBootstrap.getInstance().getConfiguration().getIdGenerator().generateId())
                             .requestType(RequestType.HEART_DANCE.getId())
-                            .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getCode())
-                            .compressType(CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCode())
+                            .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
+                            .compressType(CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
                             .build();
                     channel.writeAndFlush(qRpcRequest);
                     long startTime = System.currentTimeMillis();

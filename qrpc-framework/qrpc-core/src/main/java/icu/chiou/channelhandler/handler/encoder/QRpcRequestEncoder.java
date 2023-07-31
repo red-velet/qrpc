@@ -77,12 +77,12 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
             out.writerIndex(currIndex);
         } else {
             //根据配置进行序列化
-            Serializer serializer = SerializerFactory.getSerializer(QRpcBootstrap.SERIALIZE_TYPE).getSerializer();
+            Serializer serializer = SerializerFactory.getSerializer(QRpcBootstrap.getInstance().getConfiguration().getSerializeType()).getSerializer();
             //请求体
             //byte[] body = getBodyBytes(msg.getRequestPayload());
             byte[] body = serializer.serialize(msg.getRequestPayload());
             //根据配置进行压缩
-            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCompressor();
             body = compressor.compress(body);
 
             out.writeBytes(body);

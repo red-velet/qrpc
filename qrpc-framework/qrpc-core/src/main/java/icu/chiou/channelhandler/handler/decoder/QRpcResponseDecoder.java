@@ -103,7 +103,7 @@ public class QRpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         if (bodyArr != null && bodyArr.length != 0) {
             //9.2解压缩
             //解压缩
-            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.COMPRESS_TYPE).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCompressor();
             bodyArr = compressor.decompress(bodyArr);
 
             //9.3反序列化
