@@ -1,5 +1,6 @@
 package icu.chiou;
 
+import icu.chiou.annotation.QRpcApi;
 import icu.chiou.channelhandler.handler.MethodInvokeHandler;
 import icu.chiou.channelhandler.handler.decoder.QRpcRequestDecoder;
 import icu.chiou.channelhandler.handler.encoder.QRpcResponseEncoder;
@@ -20,12 +21,17 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Author: chiou
@@ -253,6 +259,94 @@ public class QRpcBootstrap {
 
     public Registry getRegistry() {
         return registry;
+    }
+
+    public QRpcBootstrap scan(String packageName) {
+        //1.获取packageName下的所有类的全限定名称
+        List<String> classNameList = getAllClassName(packageName);
+
+        //2.通过反射获取它的接口,创建具体实现
+        List<Class<?>> classList = classNameList.stream().map(className -> {
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }).filter(clazz -> clazz.getAnnotation(QRpcApi.class) != null
+        ).collect(Collectors.toList());
+
+        //3.发布服务
+        Object instance = null;
+        for (Class<?> clazz : classList) {
+            Class<?>[] interfaces = clazz.getInterfaces();
+            try {
+                instance = clazz.getConstructor().newInstance();
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+
+            for (Class<?> anInterface : interfaces) {
+                ServiceConfig<?> serviceConfig = new ServiceConfig<>();
+                serviceConfig.setInterface(anInterface);
+                serviceConfig.setRef(instance);
+                publish(serviceConfig);
+                if (log.isDebugEnabled()) {
+                    log.debug("✔️✔️✔️✔️已经通过包扫描将【{}】服务发布", anInterface.getName());
+                }
+            }
+        }
+        return this;
+    }
+
+    private List<String> getAllClassName(String packageName) {
+        //1.通过packageName获取绝对路径
+        String basePath = packageName.replaceAll("\\.", "/");
+        URL url = ClassLoader.getSystemClassLoader().getResource(basePath);
+        if (url == null) {
+            throw new RuntimeException("包扫描时,路径不在");
+        }
+        String absolutePath = url.getPath();
+        //递归获取所有文件路径
+        List<String> classNames = new ArrayList<>();
+
+        classNames = recursionFile(absolutePath, classNames, basePath);
+        System.out.println(classNames);
+        //2.
+        return classNames;
+    }
+
+    private List<String> recursionFile(String absolutePath, List<String> classNames, String basePath) {
+        File file = new File(absolutePath);
+        if (file.isDirectory()) {
+            //获取该目录下的所有class文件和子目录
+            File[] childFile = file.listFiles(pathname -> pathname.isDirectory() || pathname.getPath().contains(".class"));
+            if (childFile == null || childFile.length == 0) {
+                return null;
+            }
+            //遍历再继续判断子目录和文件
+            for (File child : childFile) {
+                if (child.isDirectory()) {
+                    recursionFile(child.getAbsolutePath(), classNames, basePath);
+                } else {
+                    String className = getClassNameByAbsolutePath(child.getAbsolutePath(), basePath);
+                    System.out.println(className);
+                    classNames.add(className);
+                }
+            }
+
+
+        } else {
+            String className = getClassNameByAbsolutePath(absolutePath, basePath);
+            System.out.println(className);
+            classNames.add(className);
+        }
+        return classNames;
+    }
+
+    private String getClassNameByAbsolutePath(String absolutePath, String basePath) {
+        String s = absolutePath.substring(absolutePath.indexOf(basePath.replaceAll("/", "\\\\"))).replaceAll("\\\\", ".");
+        return s.substring(0, s.indexOf(".class"));
     }
 
     //---------------------------------服务调用方的api-------------------------------------------------

@@ -24,7 +24,8 @@ public class ProviderApplication {
                 .application("first-qrpc-provider")//配置应用名
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))//配置注册中心
                 .protocol(new ProtocolConfig("jdk"))//配置序列化协议
-                .publish(serviceConfig)//发布服务
+                .scan("icu.chiou")//扫包
+                //.publish(serviceConfig)//发布服务
                 .start();//启动
     }
 }

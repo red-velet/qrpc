@@ -6,10 +6,10 @@ package icu.chiou;
  * Description: No Description
  */
 public class ServiceConfig<T> {
-    private Class<T> interfaceRef;
+    private Class<?> interfaceRef;
     private Object ref;
 
-    public void setInterface(Class<T> interfaceRef) {
+    public void setInterface(Class<?> interfaceRef) {
         this.interfaceRef = interfaceRef;
     }
 
@@ -17,7 +17,7 @@ public class ServiceConfig<T> {
         this.ref = ref;
     }
 
-    public Class<T> getInterface() {
+    public Class<?> getInterface() {
         return interfaceRef;
     }
 
