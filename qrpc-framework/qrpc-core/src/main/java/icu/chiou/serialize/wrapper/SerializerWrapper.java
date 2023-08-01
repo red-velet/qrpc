@@ -9,6 +9,7 @@ import lombok.Getter;
  * createTime: 2023/7/28
  * Description: 序列化器的包装类
  */
+@Deprecated
 @AllArgsConstructor
 @Getter
 public class SerializerWrapper {

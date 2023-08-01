@@ -111,12 +111,12 @@ public class QRpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
         if (payload != null && payload.length != 0) {
             //9.2解压缩
-            Compressor compressor = CompressorFactory.getCompressor(qRpcRequest.getCompressType()).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressor(qRpcRequest.getCompressType()).getImpl();
             payload = compressor.decompress(payload);
 
             //9.3反序列化
             //反序列化
-            Serializer serializer = SerializerFactory.getSerializer(qRpcRequest.getSerializeType()).getSerializer();
+            Serializer serializer = SerializerFactory.getSerializer(qRpcRequest.getSerializeType()).getImpl();
             RequestPayload requestPayload = serializer.deserialize(payload, RequestPayload.class);
             qRpcRequest.setRequestPayload(requestPayload);
         }

@@ -104,19 +104,6 @@ public class QRpcBootstrap {
         return this;
     }
 
-    /**
-     * 该方法用于设置当前暴露服务使用的序列化协议
-     *
-     * @param protocolConfig 序列化协议的封装
-     * @return this-返回当前实例对象
-     */
-    public QRpcBootstrap protocol(ProtocolConfig protocolConfig) {
-        configuration.setProtocolConfig(protocolConfig);
-        if (log.isDebugEnabled()) {
-            log.debug("当前工程使用了【{}】协议进行序列化", protocolConfig.toString());
-        }
-        return this;
-    }
 
     //---------------------------------服务提供方的api-------------------------------------------------
 

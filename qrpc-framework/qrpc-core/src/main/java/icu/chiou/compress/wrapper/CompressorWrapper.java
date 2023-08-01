@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
  * createTime: 2023/7/28
  * Description: 压缩器的包装类
  */
+@Deprecated
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter

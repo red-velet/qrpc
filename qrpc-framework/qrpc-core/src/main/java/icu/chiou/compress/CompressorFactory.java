@@ -1,7 +1,7 @@
 package icu.chiou.compress;
 
-import icu.chiou.compress.wrapper.CompressorWrapper;
 import icu.chiou.compress.wrapper.impl.GzipCompressor;
+import icu.chiou.config.ObjectWrapper;
 import icu.chiou.exceptions.CompressException;
 import icu.chiou.exceptions.SerializeException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,14 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class CompressorFactory {
-    private static final ConcurrentHashMap<String, CompressorWrapper> COMPRESSOR_CACHE = new ConcurrentHashMap<>(8);
-    private static final ConcurrentHashMap<Byte, CompressorWrapper> COMPRESSOR_CACHE_CODE = new ConcurrentHashMap<>(8);
+    private static final ConcurrentHashMap<String, ObjectWrapper<Compressor>> COMPRESSOR_CACHE = new ConcurrentHashMap<>(8);
+    private static final ConcurrentHashMap<Byte, ObjectWrapper<Compressor>> COMPRESSOR_CACHE_CODE = new ConcurrentHashMap<>(8);
 
     static {
-        CompressorWrapper gzipWrapper = new CompressorWrapper((byte) 1, "jdk", new GzipCompressor());
-        COMPRESSOR_CACHE.put("gzip", gzipWrapper);
+        ObjectWrapper<Compressor> objectWrapper = new ObjectWrapper<>((byte) 1, "jdk", new GzipCompressor());
+        COMPRESSOR_CACHE.put("gzip", objectWrapper);
 
-        COMPRESSOR_CACHE_CODE.put((byte) 1, gzipWrapper);
+        COMPRESSOR_CACHE_CODE.put((byte) 1, objectWrapper);
     }
 
 
@@ -32,17 +32,17 @@ public class CompressorFactory {
      * @param compressorType 压缩器类型
      * @return CompressorWrapper
      */
-    public static CompressorWrapper getCompressor(String compressorType) {
+    public static ObjectWrapper<Compressor> getCompressor(String compressorType) {
         if (compressorType == null) {
             log.error("传入的压缩器类型【{}】不合法", compressorType);
             throw new SerializeException("请传入合法的压缩器类型参数");
         }
-        CompressorWrapper compressorWrapper = COMPRESSOR_CACHE.get(compressorType);
-        if (compressorWrapper == null) {
+        ObjectWrapper<Compressor> objectWrapper = COMPRESSOR_CACHE.get(compressorType);
+        if (objectWrapper == null) {
             log.error("设置的压缩器类型【{}】暂不支持,请选择支持的压缩器类型", compressorType);
             throw new SerializeException("设置的压缩器类型【{}】暂不支持,请选择支持的压缩器类型");
         }
-        return compressorWrapper;
+        return objectWrapper;
     }
 
 
@@ -52,12 +52,22 @@ public class CompressorFactory {
      * @param code 压缩器类型码
      * @return CompressorWrapper
      */
-    public static CompressorWrapper getCompressor(byte code) {
-        CompressorWrapper CompressorWrapper = COMPRESSOR_CACHE_CODE.get(code);
-        if (CompressorWrapper == null) {
+    public static ObjectWrapper<Compressor> getCompressor(byte code) {
+        ObjectWrapper<Compressor> objectWrapper = COMPRESSOR_CACHE_CODE.get(code);
+        if (objectWrapper == null) {
             log.error("设置的压缩器类型【{}】暂不支持,请选择支持的压缩器类型", code);
             throw new CompressException("设置的压缩器类型【{}】暂不支持,请选择支持的压缩器类型");
         }
-        return CompressorWrapper;
+        return objectWrapper;
+    }
+
+    /**
+     * 给工程新增一个新的压缩策略
+     *
+     * @param compressorObjectWrapper
+     */
+    public static void addCompressor(ObjectWrapper<Compressor> compressorObjectWrapper) {
+        COMPRESSOR_CACHE.put(compressorObjectWrapper.getName(), compressorObjectWrapper);
+        COMPRESSOR_CACHE_CODE.put(compressorObjectWrapper.getCode(), compressorObjectWrapper);
     }
 }

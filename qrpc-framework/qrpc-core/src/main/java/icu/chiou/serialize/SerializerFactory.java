@@ -1,7 +1,7 @@
 package icu.chiou.serialize;
 
+import icu.chiou.config.ObjectWrapper;
 import icu.chiou.exceptions.SerializeException;
-import icu.chiou.serialize.wrapper.SerializerWrapper;
 import icu.chiou.serialize.wrapper.impl.Fastjson2Serializer;
 import icu.chiou.serialize.wrapper.impl.HessianSerializer;
 import icu.chiou.serialize.wrapper.impl.JdkSerializer;
@@ -16,13 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class SerializerFactory {
-    private static final ConcurrentHashMap<String, SerializerWrapper> SERIALIZER_CACHE = new ConcurrentHashMap<>(8);
-    private static final ConcurrentHashMap<Byte, SerializerWrapper> SERIALIZER_CACHE_CODE = new ConcurrentHashMap<>(8);
+    private static final ConcurrentHashMap<String, ObjectWrapper<Serializer>> SERIALIZER_CACHE = new ConcurrentHashMap<>(8);
+    private static final ConcurrentHashMap<Byte, ObjectWrapper<Serializer>> SERIALIZER_CACHE_CODE = new ConcurrentHashMap<>(8);
 
     static {
-        SerializerWrapper jdkWrapper = new SerializerWrapper((byte) 1, "jdk", new JdkSerializer());
-        SerializerWrapper fastjson2Wrapper = new SerializerWrapper((byte) 2, "json", new Fastjson2Serializer());
-        SerializerWrapper hessianWrapper = new SerializerWrapper((byte) 3, "hessian", new HessianSerializer());
+        ObjectWrapper<Serializer> jdkWrapper = new ObjectWrapper<Serializer>((byte) 1, "jdk", new JdkSerializer());
+        ObjectWrapper<Serializer> fastjson2Wrapper = new ObjectWrapper<Serializer>((byte) 2, "json", new Fastjson2Serializer());
+        ObjectWrapper<Serializer> hessianWrapper = new ObjectWrapper<Serializer>((byte) 3, "hessian", new HessianSerializer());
         SERIALIZER_CACHE.put("jdk", jdkWrapper);
         SERIALIZER_CACHE.put("json", fastjson2Wrapper);
         SERIALIZER_CACHE.put("hessian", hessianWrapper);
@@ -39,17 +39,17 @@ public class SerializerFactory {
      * @param serializeType 序列化类型
      * @return SerializerWrapper
      */
-    public static SerializerWrapper getSerializer(String serializeType) {
+    public static ObjectWrapper<Serializer> getSerializer(String serializeType) {
         if (serializeType == null) {
             log.error("传入的序列化类型【{}】不合法", serializeType);
             throw new SerializeException("请传入合法的序列化类型参数");
         }
-        SerializerWrapper serializerWrapper = SERIALIZER_CACHE.get(serializeType);
-        if (serializerWrapper == null) {
+        ObjectWrapper<Serializer> objectWrapper = SERIALIZER_CACHE.get(serializeType);
+        if (objectWrapper == null) {
             log.error("设置的序列化类型【{}】暂不支持,请选择支持的序列化类型", serializeType);
             throw new SerializeException("设置的序列化类型【{}】暂不支持,请选择支持的序列化类型");
         }
-        return serializerWrapper;
+        return objectWrapper;
     }
 
 
@@ -59,12 +59,22 @@ public class SerializerFactory {
      * @param code 序列化类型码
      * @return SerializerWrapper
      */
-    public static SerializerWrapper getSerializer(byte code) {
-        SerializerWrapper serializerWrapper = SERIALIZER_CACHE_CODE.get(code);
-        if (serializerWrapper == null) {
+    public static ObjectWrapper<Serializer> getSerializer(byte code) {
+        ObjectWrapper<Serializer> objectWrapper = SERIALIZER_CACHE_CODE.get(code);
+        if (objectWrapper == null) {
             log.error("设置的序列化类型【{}】暂不支持,请选择支持的序列化类型", code);
             throw new SerializeException("设置的序列化类型【{}】暂不支持,请选择支持的序列化类型");
         }
-        return serializerWrapper;
+        return objectWrapper;
+    }
+
+    /**
+     * 添加一个新的序列化策略
+     *
+     * @param objectWrapper 包装类
+     */
+    public static void addSerializer(ObjectWrapper<Serializer> objectWrapper) {
+        SERIALIZER_CACHE.put(objectWrapper.getName(), objectWrapper);
+        SERIALIZER_CACHE_CODE.put(objectWrapper.getCode(), objectWrapper);
     }
 }

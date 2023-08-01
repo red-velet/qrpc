@@ -57,12 +57,12 @@ public class QRpcResponseEncoder extends MessageToByteEncoder<QRpcResponse> {
         byte[] body = null;
         if (qRpcResponse.getBody() != null) {
             //对响应做序列化
-            Serializer serializer = SerializerFactory.getSerializer(qRpcResponse.getSerializeType()).getSerializer();
+            Serializer serializer = SerializerFactory.getSerializer(qRpcResponse.getSerializeType()).getImpl();
             //byte[] body = getBodyBytes(qRpcResponse.getBody());
             body = serializer.serialize(qRpcResponse.getBody());
 
             //压缩
-            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getImpl();
             body = compressor.compress(body);
         }
 
