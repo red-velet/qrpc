@@ -56,6 +56,8 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
         ctx.channel().writeAndFlush(qRpcResponse);
     }
 
+    public static Integer count = 1;
+
     /**
      * 调用目标对象的方法
      *
@@ -84,7 +86,14 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
             log.error("调用服务【{}】的【{}】方法时发生异常，参数【{}】", interfaceName, methodName, paramsValue, e);
             throw new RuntimeException(e);
         }
-
+//        if (count > 0) {
+//            try {
+//                Thread.sleep(12000);
+//                count--;
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
         return returnValue;
     }
 }

@@ -35,19 +35,11 @@ public class ConsumerApplication {
                 Thread.sleep(5000);
                 log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
                 //获取代理对象
-                for (int i = 0; i < 5; i++) {
-                    String love = helloQRpc.say("i love you");
-                    log.info("❤️i love you is {}", love);
-                }
+                String love = helloQRpc.say("i love you");
+                log.info("远程方法调用返回 --> ❤️ {}", love);
             } catch (RuntimeException e) {
-                //throw new RuntimeException(e);
                 e.printStackTrace();
             }
-//            //获取代理对象
-//            for (int i = 0; i < 5; i++) {
-//                String love = helloQRpc.say("i love you");
-//                log.info("❤️i love you is {}", love);
-//            }
         }
     }
 }

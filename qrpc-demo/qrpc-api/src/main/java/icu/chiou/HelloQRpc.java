@@ -1,5 +1,7 @@
 package icu.chiou;
 
+import icu.chiou.annotation.Retry;
+
 /**
  * Author: chiou
  * createTime: 2023/7/23
@@ -12,5 +14,6 @@ public interface HelloQRpc {
      * @param msg 交流的信息
      * @return 响应回答
      */
+    @Retry(tryTimes = 3, intervalTime = 3000)
     String say(String msg);
 }

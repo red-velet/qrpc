@@ -2,6 +2,7 @@ package icu.chiou.proxy.handler;
 
 import icu.chiou.NettyBootstrapInitializer;
 import icu.chiou.QRpcBootstrap;
+import icu.chiou.annotation.Retry;
 import icu.chiou.compress.CompressorFactory;
 import icu.chiou.discovery.Registry;
 import icu.chiou.enumeration.RequestType;
@@ -44,60 +45,90 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        log.info("进入代理对象->methodName -> {}", method.getName());
-        log.info("进入代理对象->method args -> {}", args);
-        //1.封装报文
-        RequestPayload requestPayload = RequestPayload.builder()
-                .interfaceName(interfaceRef.getName())
-                .methodName(method.getName())
-                .paramsType(method.getParameterTypes())
-                .paramsValue(args)
-                .returnType(method.getReturnType())
-                .build();
-
-        QRpcRequest qRpcRequest = QRpcRequest.builder()
-                .requestId(QRpcBootstrap.getInstance().getConfiguration().getIdGenerator().generateId())
-                .requestType(RequestType.REQUEST.getId())
-                .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
-                .compressType(CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
-                .requestPayload(requestPayload)
-                .build();
-
-        //将请求存入本地线程,需要在合适的时候调用remove方法
-        QRpcBootstrap.REQUEST_THREAD_LOCAL.set(qRpcRequest);
-
-        //2.发现服务-从注册中心寻找可用服务,拉取服务列表,并通过客户端负载均衡器寻找一个可用的服务
-
-        InetSocketAddress address = QRpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectAvailableService(interfaceRef.getName());
-
-
-        if (log.isDebugEnabled()) {
-            log.debug("服务调用方发现了服务【{}】的可用主机【{}】", interfaceRef.getName(), address);
+    public Object invoke(Object proxy, Method method, Object[] args) {
+        //todo 异常重试机制 1.异常重试 2.响应
+        //从接口判断是否需要重试
+        Retry retry = method.getAnnotation(Retry.class);
+        //默认值0,不重试
+        int tryTime = 0;
+        int intervalTime = 0;
+        if (retry != null) {
+            tryTime = retry.tryTimes();
+            intervalTime = retry.intervalTime();
         }
 
-        //3.尝试获取可用通道
-        Channel channel = getAvaiableChannel(address);
-        if (log.isDebugEnabled()) {
-            log.debug("获取了和【{}】建立的连接通道", address);
-        }
+        while (true) {
+            try {
+                log.info("进入代理对象->methodName -> {}", method.getName());
+                log.info("进入代理对象->method args -> {}", args);
+                //1.封装报文
+                RequestPayload requestPayload = RequestPayload.builder()
+                        .interfaceName(interfaceRef.getName())
+                        .methodName(method.getName())
+                        .paramsType(method.getParameterTypes())
+                        .paramsValue(args)
+                        .returnType(method.getReturnType())
+                        .build();
 
-        //4.写出报文
-        CompletableFuture<Object> completableFuture = new CompletableFuture<>();
-        //将completableFuture暴露出去
-        QRpcBootstrap.PENDING_REQUEST.put(qRpcRequest.getRequestId(), completableFuture);
-        //这里直接写出了请求：请求的实例会直接进入pipeline执行出站的一系列操作
-        channel.writeAndFlush(qRpcRequest).addListener((ChannelFutureListener) promise -> {
-            if (!promise.isSuccess()) {
-                completableFuture.completeExceptionally(promise.cause());
+                QRpcRequest qRpcRequest = QRpcRequest.builder()
+                        .requestId(QRpcBootstrap.getInstance().getConfiguration().getIdGenerator().generateId())
+                        .requestType(RequestType.REQUEST.getId())
+                        .serializeType(SerializerFactory.getSerializer(QRpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
+                        .compressType(CompressorFactory.getCompressor(QRpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
+                        .requestPayload(requestPayload)
+                        .build();
+
+                //将请求存入本地线程,需要在合适的时候调用remove方法
+                QRpcBootstrap.REQUEST_THREAD_LOCAL.set(qRpcRequest);
+
+                //2.发现服务-从注册中心寻找可用服务,拉取服务列表,并通过客户端负载均衡器寻找一个可用的服务
+
+                InetSocketAddress address = QRpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectAvailableService(interfaceRef.getName());
+
+
+                if (log.isDebugEnabled()) {
+                    log.debug("服务调用方发现了服务【{}】的可用主机【{}】", interfaceRef.getName(), address);
+                }
+
+                //3.尝试获取可用通道
+                Channel channel = getAvaiableChannel(address);
+                if (log.isDebugEnabled()) {
+                    log.debug("获取了和【{}】建立的连接通道", address);
+                }
+
+                //4.写出报文
+                CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+                //将completableFuture暴露出去
+                QRpcBootstrap.PENDING_REQUEST.put(qRpcRequest.getRequestId(), completableFuture);
+                //这里直接写出了请求：请求的实例会直接进入pipeline执行出站的一系列操作
+                channel.writeAndFlush(qRpcRequest).addListener((ChannelFutureListener) promise -> {
+                    if (!promise.isSuccess()) {
+                        completableFuture.completeExceptionally(promise.cause());
+                    }
+                });
+
+                //清理ThreadLocal
+                QRpcBootstrap.REQUEST_THREAD_LOCAL.remove();
+
+                //5.获得响应的结果
+                return completableFuture.get(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                //重试次数减一,过一段时间重试
+                tryTime--;
+                try {
+                    //间隔重试
+                    Thread.sleep(intervalTime);
+                } catch (InterruptedException ex) {
+                    log.error("在发生重试时发生异常..." + ex);
+                }
+                if (tryTime < 0) {
+                    log.error("对方法【{}】进行远程调用时,发生异常,重试第【{}】次,依旧不可调用...", method.getName(), 3 - tryTime, e);
+                    break;
+                }
+                log.error("对方法【{}】进行远程调用时,发生异常,正在重试第【{}】次...", method.getName(), 3 - tryTime, e);
             }
-        });
-
-        //清理ThreadLocal
-        QRpcBootstrap.REQUEST_THREAD_LOCAL.remove();
-
-        //5.获得响应的结果
-        return completableFuture.get(10, TimeUnit.SECONDS);
+        }
+        throw new RuntimeException("执行远程方法【" + method.getName() + "】调用失败...");
     }
 
     private static Channel getAvaiableChannel(InetSocketAddress address) throws RuntimeException {

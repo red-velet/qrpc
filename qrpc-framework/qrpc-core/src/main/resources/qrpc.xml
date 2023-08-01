@@ -2,7 +2,7 @@
 <!DOCTYPE configuration SYSTEM "qrpc-config.dtd">
 <configuration>
     <!--端口号-->
-    <port>8099</port>
+    <port>8093</port>
 
     <!--应用名-->
     <application>qrpc-default-applicationName</application>
