@@ -18,12 +18,12 @@ public abstract class AbstractLoadBalancer implements LoadBalancer {
 
 
     @Override
-    public InetSocketAddress selectAvailableService(String name) {
+    public InetSocketAddress selectAvailableService(String name, String group) {
         //轮询的负载均衡算法实现
         //通过服务名,拉取服务列表缓存
         Selector selector = cache.get(name);
         if (null == selector) {
-            List<InetSocketAddress> serviceList = QRpcBootstrap.getInstance().getRegistry().lookup(name);
+            List<InetSocketAddress> serviceList = QRpcBootstrap.getInstance().getRegistry().lookup(name, group);
             selector = getSelector(serviceList);
             cache.put(name, selector);
         }

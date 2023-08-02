@@ -43,10 +43,12 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
     // 维护一个注册中心
     private Registry registry;
     private Class<?> interfaceRef;
+    private String group;
 
-    public RpcConsumerInvocationHandler(Registry registry, Class<?> interfaceRef) {
+    public RpcConsumerInvocationHandler(Registry registry, Class<?> interfaceRef, String group) {
         this.registry = registry;
         this.interfaceRef = interfaceRef;
+        this.group = group;
     }
 
     @Override
@@ -87,7 +89,11 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
             QRpcBootstrap.REQUEST_THREAD_LOCAL.set(qRpcRequest);
 
             // 4. 发现服务-从注册中心寻找可用服务，拉取服务列表，并通过客户端负载均衡器寻找一个可用的服务
-            InetSocketAddress address = QRpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectAvailableService(interfaceRef.getName());
+            InetSocketAddress address = QRpcBootstrap
+                    .getInstance()
+                    .getConfiguration()
+                    .getLoadBalancer()
+                    .selectAvailableService(interfaceRef.getName(), group);
             try {
                 // todo 熔断器
                 // 5. 获取当前地址所对应的断路器

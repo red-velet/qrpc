@@ -8,7 +8,7 @@ import icu.chiou.annotation.QRpcApi;
  * createTime: 2023/7/23
  * Description: 具体实现
  */
-@QRpcApi
+@QRpcApi(group = "primary")
 public class HelloQRpcImpl implements HelloQRpc {
     @Override
     public String say(String msg) {

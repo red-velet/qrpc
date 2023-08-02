@@ -27,6 +27,7 @@ public class ConsumerApplication {
                 .registry(new RegistryConfig("zookeeper://127.0.0.1:2181"))
                 .serialize("json")
                 .compress("gzip")
+                .group("primary")
                 .reference(reference);
         HelloQRpc helloQRpc = reference.get();
 

@@ -30,7 +30,7 @@ public class UpAndDownWatcher implements Watcher {
             // 拉取最新的服务
             String serviceName = getServiceName(event.getPath());
             Registry registry = QRpcBootstrap.getInstance().getRegistry();
-            List<InetSocketAddress> addresses = registry.lookup(serviceName);
+            List<InetSocketAddress> addresses = registry.lookup(serviceName, QRpcBootstrap.getInstance().getConfiguration().getGroup());
             for (InetSocketAddress address : addresses) {
                 //上线新服务: 最新服务列表有addresses-address,本地缓存CHANNEL_CACHE没有
                 if (!QRpcBootstrap.CHANNEL_CACHE.containsKey(address)) {

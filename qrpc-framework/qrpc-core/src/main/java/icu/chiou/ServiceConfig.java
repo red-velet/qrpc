@@ -8,6 +8,15 @@ package icu.chiou;
 public class ServiceConfig<T> {
     private Class<?> interfaceRef;
     private Object ref;
+    private String group = "default";
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    public String getGroup() {
+        return group;
+    }
 
     public void setInterface(Class<?> interfaceRef) {
         this.interfaceRef = interfaceRef;

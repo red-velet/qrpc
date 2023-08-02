@@ -26,7 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class Configuration {
     //配置信息-->应用名
-    private String applicationName;
+    private String applicationName = "qrpc";
+
+    //配置信息-->分组
+    private String group = "default";
+
     //配置信息-->端口
     private int port = 8096;
 

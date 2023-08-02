@@ -61,7 +61,7 @@ public class QRpcBootstrap {
 
     public static final ThreadLocal<QRpcRequest> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
 
-    
+
     private QRpcBootstrap() {
         //构造启动程序时需要做一些初始化
         configuration = new Configuration();
@@ -206,11 +206,13 @@ public class QRpcBootstrap {
     //---------------------------------服务调用方的api-------------------------------------------------
 
     public QRpcBootstrap reference(ReferenceConfig<?> reference) {
-        //在这个方法里我们是否可以拿到相关的配置项: 如注册中心
+        //在这个方法里我们是否可以拿到相关的配置项: 如注册中心,分组信息-在调用时才能有调用的能力,并且确认调用哪个分组的
         //配置reference,便于后面调用get方法时,生成代理对象
-        //开启心跳检测
+        //开启对整个服务的心跳检测
         HeartbeatDetector.detectorHeaderDance(reference.getInterface().getName());
+
         reference.setRegistry(configuration.getRegistryConfig().getRegistry());
+        reference.setGroup(configuration.getGroup());
         return this;
     }
 
@@ -230,6 +232,16 @@ public class QRpcBootstrap {
         }
         if (log.isDebugEnabled()) {
             log.debug("配置了使用压缩的算法为【{}】", configuration.getCompressType());
+        }
+        return this;
+    }
+
+    public QRpcBootstrap group(String group) {
+        if (group != null) {
+            configuration.setGroup(group);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("配置了分组属于【{}】", configuration.getGroup());
         }
         return this;
     }
@@ -263,10 +275,14 @@ public class QRpcBootstrap {
                 throw new RuntimeException(e);
             }
 
+            //获取分组信息
+            String group = clazz.getAnnotation(QRpcApi.class).group();
+
             for (Class<?> anInterface : interfaces) {
                 ServiceConfig<?> serviceConfig = new ServiceConfig<>();
                 serviceConfig.setInterface(anInterface);
                 serviceConfig.setRef(instance);
+                serviceConfig.setGroup(group);
                 publish(serviceConfig);
                 if (log.isDebugEnabled()) {
                     log.debug("✔️✔️✔️✔️已经通过包扫描将【{}】服务发布", anInterface.getName());
@@ -325,6 +341,7 @@ public class QRpcBootstrap {
         String s = absolutePath.substring(absolutePath.indexOf(basePath.replaceAll("/", "\\\\"))).replaceAll("\\\\", ".");
         return s.substring(0, s.indexOf(".class"));
     }
+
 
     //---------------------------------服务调用方的api-------------------------------------------------
 

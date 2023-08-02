@@ -29,7 +29,7 @@ public class HeartbeatDetector {
         //心跳检测
         //1.不让客户端直接面向注册中心拉取服务，而是通过心跳检测拉取服务列表
         Registry registry = QRpcBootstrap.getInstance().getRegistry();
-        List<InetSocketAddress> addressList = registry.lookup(serviceName);
+        List<InetSocketAddress> addressList = registry.lookup(serviceName, QRpcBootstrap.getInstance().getConfiguration().getGroup());
 
         //建立连接
         for (InetSocketAddress address : addressList) {

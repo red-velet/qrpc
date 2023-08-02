@@ -22,7 +22,8 @@ public interface Registry {
      * 从注册中心拉取一个服务
      *
      * @param serviceName 服务的名称
+     * @param group       分组名
      * @return 服务的地址(ip + 端口)
      */
-    List<InetSocketAddress> lookup(String serviceName);
+    List<InetSocketAddress> lookup(String serviceName, String group);
 }

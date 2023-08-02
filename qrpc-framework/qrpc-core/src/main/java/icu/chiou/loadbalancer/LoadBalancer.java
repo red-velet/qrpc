@@ -12,10 +12,11 @@ public interface LoadBalancer {
     /**
      * 根据服务名获取一个可用的服务
      *
-     * @param name 服务吗
+     * @param name  服务名
+     * @param group 分组名
      * @return 可用服务地址
      */
-    InetSocketAddress selectAvailableService(String name);
+    InetSocketAddress selectAvailableService(String name, String group);
 
     /**
      * 当感知节点发生了动态上下线，我们需要重新进行负载均衡
