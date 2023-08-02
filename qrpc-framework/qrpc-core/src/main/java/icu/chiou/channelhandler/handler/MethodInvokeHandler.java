@@ -2,6 +2,7 @@ package icu.chiou.channelhandler.handler;
 
 import icu.chiou.QRpcBootstrap;
 import icu.chiou.ServiceConfig;
+import icu.chiou.core.ShutdownHolder;
 import icu.chiou.enumeration.RequestType;
 import icu.chiou.enumeration.ResponseCode;
 import icu.chiou.protection.RateLimiter;
@@ -28,16 +29,27 @@ import java.util.Map;
 public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, QRpcRequest msg) throws Exception {
-        //封装响应
+        //1.封装响应
         QRpcResponse qRpcResponse = QRpcResponse.builder()
                 .requestId(msg.getRequestId())
                 .serializeType(msg.getSerializeType())
                 .compressType(msg.getCompressType())
                 .build();
 
-        //添加限流操作
-        //添加缓存
+        //2.获取通道
         Channel channel = ctx.channel();
+
+        //3.查看挡板状态,挡板如已开启,直接返回一个响应
+        if (ShutdownHolder.IS_GATE_OPEN.get()) {
+            qRpcResponse.setCode(ResponseCode.CLOSING.getCode());
+            channel.writeAndFlush(qRpcResponse);
+        }
+
+        //4.请求计数器加一
+        ShutdownHolder.REQUEST_COUNTER.increment();
+
+        //5.添加限流操作
+        //5.1添加缓存
         SocketAddress socketAddress = channel.remoteAddress();
         Map<SocketAddress, RateLimiter> everyIpRateLimiter = QRpcBootstrap.getInstance().getConfiguration().getEveryIpRateLimiter();
         RateLimiter rateLimiter = everyIpRateLimiter.get(socketAddress);
@@ -46,17 +58,20 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
             everyIpRateLimiter.put(socketAddress, rateLimiter);
         }
 
-        //限流
+        //5.2限流
         Boolean pass = rateLimiter.isAllowRequest();
         if (!pass) {
+            //被限流了
             qRpcResponse.setCode(ResponseCode.RATE_LIMIT.getCode());
-        } else if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {//心跳
+        } else if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
+            //处理心跳请求
             //日志记录
             if (log.isDebugEnabled()) {
                 log.debug("请求【{}】为心跳请求,已经在服务端接收到", msg.getRequestId());
             }
             qRpcResponse.setCode(ResponseCode.SUCCESS_HEART_DANCE.getCode());
-        } else {//方法调用
+        } else {
+            //正常方法调用
             //1.获取负载内容
             RequestPayload payload = msg.getRequestPayload();
             try {
@@ -74,11 +89,12 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
             }
         }
 
-        //4.写出响应
+        //6.写出响应
         ctx.channel().writeAndFlush(qRpcResponse);
-    }
 
-    public static Integer count = 1;
+        //7.请求计数器减一
+        ShutdownHolder.REQUEST_COUNTER.decrement();
+    }
 
     /**
      * 调用目标对象的方法
@@ -107,14 +123,6 @@ public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-//        if (count > 0) {
-//            try {
-//                Thread.sleep(12000);
-//                count--;
-//            } catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
         return returnValue;
     }
 }

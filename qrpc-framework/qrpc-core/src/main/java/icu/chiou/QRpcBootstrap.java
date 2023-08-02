@@ -6,6 +6,7 @@ import icu.chiou.channelhandler.handler.decoder.QRpcRequestDecoder;
 import icu.chiou.channelhandler.handler.encoder.QRpcResponseEncoder;
 import icu.chiou.config.Configuration;
 import icu.chiou.core.HeartbeatDetector;
+import icu.chiou.core.QRpcShutdownHook;
 import icu.chiou.discovery.Registry;
 import icu.chiou.discovery.RegistryConfig;
 import icu.chiou.loadbalancer.LoadBalancer;
@@ -139,6 +140,8 @@ public class QRpcBootstrap {
      * 该方法用于启动服务(netty服务)
      */
     public void start() {
+        //注册关闭应用程序的钩子函数
+        Runtime.getRuntime().addShutdownHook(new QRpcShutdownHook());
         //启动netty服务
         EventLoopGroup boss = null;
         EventLoopGroup worker = null;

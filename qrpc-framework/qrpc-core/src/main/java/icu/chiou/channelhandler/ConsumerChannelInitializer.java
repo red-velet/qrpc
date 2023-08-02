@@ -1,6 +1,6 @@
 package icu.chiou.channelhandler;
 
-import icu.chiou.channelhandler.handler.MySimpleChannelInboundHandler;
+import icu.chiou.channelhandler.handler.MethodCallBackHandler;
 import icu.chiou.channelhandler.handler.decoder.QRpcResponseDecoder;
 import icu.chiou.channelhandler.handler.encoder.QRpcRequestEncoder;
 import io.netty.channel.ChannelInitializer;
@@ -24,6 +24,6 @@ public class ConsumerChannelInitializer extends ChannelInitializer<SocketChannel
                 //入站的解码器
                 .addLast(new QRpcResponseDecoder())
                 //处理结果
-                .addLast(new MySimpleChannelInboundHandler());
+                .addLast(new MethodCallBackHandler());
     }
 }

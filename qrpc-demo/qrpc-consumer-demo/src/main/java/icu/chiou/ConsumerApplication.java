@@ -31,9 +31,21 @@ public class ConsumerApplication {
                 .reference(reference);
         HelloQRpc helloQRpc = reference.get();
 
-//        while (true) {
+        while (true) {
+            try {
+                Thread.sleep(5000);
+                log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
+                //获取代理对象
+                for (int i = 0; i < 200; i++) {
+                    String love = helloQRpc.say("i love you");
+                    log.info("远程方法调用返回 --> ❤️ {}", love);
+                }
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+            }
+        }
+//        for (int i = 0; i < 500; i++) {
 //            try {
-//                Thread.sleep(5000);
 //                log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
 //                //获取代理对象
 //                String love = helloQRpc.say("i love you");
@@ -42,15 +54,5 @@ public class ConsumerApplication {
 //                e.printStackTrace();
 //            }
 //        }
-        for (int i = 0; i < 500; i++) {
-            try {
-                log.info("++++++++>>>>>>>>>>>>>>>>>>>>>>===============>>>>>>>>>>>>>>>>>>>");
-                //获取代理对象
-                String love = helloQRpc.say("i love you");
-                log.info("远程方法调用返回 --> ❤️ {}", love);
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

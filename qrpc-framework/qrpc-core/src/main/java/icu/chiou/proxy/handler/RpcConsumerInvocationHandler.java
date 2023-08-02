@@ -95,7 +95,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                     .getLoadBalancer()
                     .selectAvailableService(interfaceRef.getName(), group);
             try {
-                // todo 熔断器
+                // 熔断器
                 // 5. 获取当前地址所对应的断路器
                 Map<SocketAddress, CircuitBreaker> everyIpBreaker = QRpcBootstrap.getInstance().getConfiguration().everyIpBreaker;
                 CircuitBreaker circuitBreaker = everyIpBreaker.get(address);
@@ -116,7 +116,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                                     .reset();
                         }
                     }, 5000);
-                    throw new RuntimeException("当前断路器已开启，无法发送请求!!!");
+                    throw new RuntimeException("当前熔断器已开启，无法发送请求!!!");
                 }
 
                 if (log.isDebugEnabled()) {
