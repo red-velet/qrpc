@@ -15,6 +15,8 @@
         <module>qrpc-demo/qrpc-provider-demo</module>
         <module>qrpc-demo/qrpc-consumer-demo</module>
         <module>qrpc-demo/qrpc-api</module>
+        <module>qrpc-demo/qrpc-springboot-provider-demo</module>
+        <module>qrpc-demo/qrpc-springboot-consumer-demo</module>
     </modules>
 
     <properties>
