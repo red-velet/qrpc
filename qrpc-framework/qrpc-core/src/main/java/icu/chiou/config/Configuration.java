@@ -6,9 +6,15 @@ import icu.chiou.config.resolver.XmlResolver;
 import icu.chiou.discovery.RegistryConfig;
 import icu.chiou.loadbalancer.LoadBalancer;
 import icu.chiou.loadbalancer.impl.RoundRobinLoadBalancer;
+import icu.chiou.protection.CircuitBreaker;
+import icu.chiou.protection.RateLimiter;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Author: chiou
@@ -40,6 +46,11 @@ public class Configuration {
 
     //配置信息-->负载均衡策略
     private LoadBalancer loadBalancer = new RoundRobinLoadBalancer();
+
+    //限流器
+    public Map<SocketAddress, RateLimiter> everyIpRateLimiter = new ConcurrentHashMap<>(64);
+    //断路器
+    public Map<SocketAddress, CircuitBreaker> everyIpBreaker = new ConcurrentHashMap<>(64);
 
     public Configuration() {
         //1.成员变量默认配置项
