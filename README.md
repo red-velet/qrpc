@@ -1,8 +1,8 @@
-# QPRC
+# 																		QPRC
 
-这是一个手写RPC项目，用于实现远程过程调用（RPC）通信。
+​								🚀🚀🚀这是一个手写RPC项目，用于实现远程过程调用（RPC）通信🚀🚀🚀
 
-## 一、功能特性
+## 										一、功能特性
 
 - **简单的RPC框架的实现**：该RPC框架实现了基本的远程过程调用功能，允许客户端通过网络调用远程服务的方法，实现分布式系统之间的通信和协作。
 - **基于Netty的TCP的网络通信基本机制**：RPC框架使用Netty作为底层通信框架，利用Netty提供的异步非阻塞IO特性，为了提高系统的并发处理能力，使用CompletableFuture等方式处理异步请求和结果。通过异步通信，可以在高并发情况下充分利用系统资源，提高性能和吞吐量。
@@ -19,7 +19,21 @@
 
 
 
-## 二、快速开始
+## 											二、项目架构
+
+#### 															  1、组成和基本流程
+
+![makeup](img/makeup.png)
+
+
+
+#### 																2、分层和模块
+
+![layering](img/layering.png)、
+
+
+
+## 											二、快速开始
 
 1. 克隆项目到本地：
 
@@ -30,26 +44,61 @@ cd qprc
 
 2. 修改配置文件：
 
-在`src/main/resources`目录下，根据您的需求修改配置文件。
+在`qrpc-core/src/main/resources`目录下，创建`qprc.xml`根据您的需求修改配置文件：
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration SYSTEM "qrpc-config.dtd">
+<configuration>
+    <!--端口号-->
+    <port>8095</port>
+
+    <!--应用名-->
+    <application>qrpc-default-applicationName</application>
+
+    <!--注册中心-->
+    <registry url="zookeeper://127.0.0.1:2181"/>
+
+    <!-- 二选一 -->
+    <!--序列化协议-->
+    <serializeType type="hessian"/>
+    <serializer code="1" name="hessian" class="icu.chiou.serialize.wrapper.impl.HessianSerializer"/>
+
+    <!-- 二选一 -->
+    <!--压缩协议-->
+    <compressType type="gzip"/>
+    <compressor code="1" name="gzip" class="icu.chiou.compress.wrapper.impl.GzipCompressor"/>
+
+    <!-- 二选一 -->
+    <!--负载均衡策略-->
+    <loadBalancer class="icu.chiou.loadbalancer.impl.MinimumResponseTimeLoadBalancer"/>
+    <loadBalancerType type="minimumResponseTime"/>
+
+    <!--id生成器-->
+    <idGenerator class="icu.chiou.IDGenerator" dataCenterId="2" MachineId="4"/>
+</configuration>
+```
 
 
 
-## 三、API文档
+## 											三、API文档
 
-暂无
-请参考[API文档](docs/API.md)了解更多关于RPC框架的使用方法与API接口。
-
-
-
-## 四、贡献指南
-
-欢迎提交Issue或Pull Request，感谢您的贡献！
+​																							暂无
+​													请参考[API文档](docs/API.md)了解更多关于RPC框架的使用方法与API接口。
 
 
 
-## 五、联系我们
+## 											四、贡献指南
 
-如果您有任何疑问或建议，请发送邮件至bluebeastmight@gmail.com。
+​														欢迎提交Issue或Pull Request，感谢您的贡献！😊😊😊
+
+
+
+## 											五、联系交流
+
+​											如果您有任何疑问或建议，请发送邮件至bluebeastmight@gmail.com。
+
+​											个人博客: www.chiou.icu
 
 ---
 
