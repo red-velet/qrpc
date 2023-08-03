@@ -24,7 +24,7 @@ import java.io.ObjectOutputStream;
  * Description: 请求的编码器-出战时，第一个经过的处理器
  * 报文结构:
  * 4byte = magic -- 魔数值 -- qrpc
- * 1byte = version
+ * 1byte = version -- 版本号
  * 2byte = headLength -- 首部长度
  * 4byte = fullLength -- 报文长度
  * 1byte = requestType

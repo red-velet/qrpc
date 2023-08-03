@@ -49,7 +49,7 @@ public class ReferenceConfig<T> {
      * @return 代理对象
      */
     public T get() {
-        //todo 使用动态代理,完成一些工作,如通过注册中心获取具体实现类
+        //使用动态代理,完成一些工作,如通过注册中心获取具体实现类
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Class[] classes = new Class[]{interfaceRef};
         InvocationHandler invocationHandler = new RpcConsumerInvocationHandler(registry, interfaceRef, group);
