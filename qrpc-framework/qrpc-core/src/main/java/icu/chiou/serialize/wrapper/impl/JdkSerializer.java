@@ -1,5 +1,6 @@
 package icu.chiou.serialize.wrapper.impl;
 
+import icu.chiou.QRpcBootstrap;
 import icu.chiou.exceptions.SerializeException;
 import icu.chiou.serialize.Serializer;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,11 @@ import java.io.*;
 public class JdkSerializer implements Serializer {
     @Override
     public byte[] serialize(Object object) {
+        long start = System.currentTimeMillis();
+        int length = object.toString().getBytes().length;
+        if (log.isDebugEnabled()) {
+            log.debug("使用jdk方式成功完成【序列化】操作前的数组长度:{}", length);
+        }
         if (object == null) {
             return null;
         }
@@ -24,11 +30,17 @@ public class JdkSerializer implements Serializer {
         ) {
             oos.writeObject(object);
             if (log.isDebugEnabled()) {
-                log.debug("请求报文内对象【{}】,使用jdk方式成功完成了【序列化】操作", object);
+                //log.debug("请求报文内对象【{}】,使用jdk方式成功完成了【序列化】操作", object);
+                log.debug("请求报文内对象【{}】,使用【{}】方式成功完成了【序列化】操作", object.getClass(), QRpcBootstrap.getInstance().getConfiguration().getSerializeType());
+
             }
             byte[] bytes = baos.toByteArray();
+            long end = System.currentTimeMillis();
             if (log.isDebugEnabled()) {
-                log.debug("使用jdk方式成功完成【序列化】操作后的数组长度:{}", bytes.length);
+                log.debug("使用【{}】方式成功完成【序列化】: " +
+                                "\n\t操作前字节数组大小 -> 操作后字节数组大小 | {} -> {}" +
+                                "\n\t序列化耗时: {} ms",
+                        QRpcBootstrap.getInstance().getConfiguration().getSerializeType(), length, bytes.length, (end - start));
             }
             return bytes;
         } catch (IOException e) {

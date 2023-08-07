@@ -2,6 +2,7 @@ package icu.chiou.serialize.wrapper.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONReader;
+import icu.chiou.QRpcBootstrap;
 import icu.chiou.exceptions.SerializeException;
 import icu.chiou.serialize.Serializer;
 import icu.chiou.transport.message.RequestPayload;
@@ -16,17 +17,27 @@ import lombok.extern.slf4j.Slf4j;
 public class Fastjson2Serializer implements Serializer {
     @Override
     public byte[] serialize(Object object) {
+        long start = System.currentTimeMillis();
+        int length = object.toString().getBytes().length;
+        if (log.isDebugEnabled()) {
+            log.debug("使用fastjson2方式成功完成【序列化】操作前的数组长度:{}", length);
+        }
         if (object == null) {
             return null;
         }
         //使用fastjson序列化对象
         try {
             byte[] bytes = JSON.toJSONBytes(object);
+            long end = System.currentTimeMillis();
             if (log.isDebugEnabled()) {
-                log.debug("请求报文内对象【{}】,使用fastjson2方式成功完成了【序列化】操作", object);
+                //log.debug("请求报文内对象【{}】,使用fastjson2方式成功完成了【序列化】操作", object);
+                log.debug("请求报文内对象【{}】,使用【{}】方式成功完成了【序列化】操作", object.getClass(), QRpcBootstrap.getInstance().getConfiguration().getSerializeType());
             }
             if (log.isDebugEnabled()) {
-                log.debug("使用fastjson2方式成功完成【序列化】操作后的数组长度:{}", bytes.length);
+                log.debug("使用【{}】方式成功完成【序列化】: " +
+                                "\n\t操作前字节数组大小 -> 操作后字节数组大小 | {} -> {}" +
+                                "\n\t序列化耗时: {} ms",
+                        QRpcBootstrap.getInstance().getConfiguration().getSerializeType(), length, bytes.length, (end - start));
             }
             return bytes;
         } catch (RuntimeException e) {

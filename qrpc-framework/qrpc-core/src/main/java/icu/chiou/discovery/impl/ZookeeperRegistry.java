@@ -5,6 +5,7 @@ import icu.chiou.ServiceConfig;
 import icu.chiou.constants.Constant;
 import icu.chiou.discovery.AbstractRegistry;
 import icu.chiou.exceptions.DiscoveryException;
+import icu.chiou.exceptions.ZookeeperException;
 import icu.chiou.utils.NetUtil;
 import icu.chiou.utils.zookeeper.ZookeeperNode;
 import icu.chiou.utils.zookeeper.ZookeeperUtil;
@@ -72,19 +73,44 @@ public class ZookeeperRegistry extends AbstractRegistry {
     public List<InetSocketAddress> lookup(String serviceName, String group) {
         //1.找到服务对应的节点
         String serviceNodePath = Constant.BASE_PROVIDERS_PATH + "/" + serviceName + "/" + group;
-        List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, new UpAndDownWatcher());
-        //2.从zookeeper中获取其子节点列表
-        //获取了所有可用服务列表
-        List<InetSocketAddress> collect = serviceList.stream().map(ipString -> {
-            String[] ipAndPort = ipString.split(":");
-            String ip = ipAndPort[0];
-            int port = Integer.parseInt(ipAndPort[1]);
-            return new InetSocketAddress(ip, port);
-        }).collect(Collectors.toList());
-        if (collect.size() == 0) {
-            throw new DiscoveryException("没有发现可用服务列表");
-        }
+        //思考: 如果注册中心挂了怎么办?
+        //a.先重试
+        //b.
+        int maxRetries = 3; // 最大重试次数
+        int retryDelayMs = 1000; // 初始重试延迟时间，单位毫秒
+        int maxRetryDelayMs = 5000; // 最大重试延迟时间，单位毫秒
+        int retryCount = 0;
+        while (retryCount < maxRetries) {
+            try {
+                List<String> serviceList = ZookeeperUtil.getChildrenList(zooKeeper, serviceNodePath, new UpAndDownWatcher());
+                //2.从zookeeper中获取其子节点列表
+                //获取了所有可用服务列表
+                List<InetSocketAddress> collect = serviceList.stream().map(ipString -> {
+                    String[] ipAndPort = ipString.split(":");
+                    String ip = ipAndPort[0];
+                    int port = Integer.parseInt(ipAndPort[1]);
+                    return new InetSocketAddress(ip, port);
+                }).collect(Collectors.toList());
+                if (collect.size() == 0) {
+                    throw new DiscoveryException("没有发现可用服务列表");
+                }
+                return collect;
+            } catch (ZookeeperException e) {
+                // 处理Zookeeper异常，例如连接问题等
+                log.error("Zookeeper异常：{}", e.getMessage());
+            }
+            // 进行重试，使用指数退避策略
+            retryCount++;
+            int currentDelay = retryDelayMs * (1 << (retryCount - 1));
+            retryDelayMs = Math.min(currentDelay, maxRetryDelayMs);
 
-        return collect;
+            try {
+                Thread.sleep(retryDelayMs);
+            } catch (InterruptedException e) {
+                log.error("重试线程中断异常：{}", e.getMessage());
+                Thread.currentThread().interrupt();
+            }
+        }
+        throw new ZookeeperException("重试多次仍未找到可用服务列表");
     }
 }

@@ -2,6 +2,7 @@ package icu.chiou.serialize.wrapper.impl;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
+import icu.chiou.QRpcBootstrap;
 import icu.chiou.exceptions.SerializeException;
 import icu.chiou.serialize.Serializer;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import java.io.IOException;
 public class HessianSerializer implements Serializer {
     @Override
     public byte[] serialize(Object object) {
+        long start = System.currentTimeMillis();
+        int length = object.toString().getBytes().length;
         if (object == null) {
             return null;
         }
@@ -30,11 +33,16 @@ public class HessianSerializer implements Serializer {
             hessian2Output.writeObject(object);
             hessian2Output.flush();
             if (log.isDebugEnabled()) {
-                log.debug("请求报文内对象【{}】,使用hessian方式成功完成了【序列化】操作", object);
+                //log.debug("请求报文内对象【{}】,使用hessian方式成功完成了【序列化】操作", object);
+                log.debug("请求报文内对象【{}】,使用【{}】方式成功完成了【序列化】操作", object.getClass(), QRpcBootstrap.getInstance().getConfiguration().getSerializeType());
             }
             byte[] bytes = baos.toByteArray();
+            long end = System.currentTimeMillis();
             if (log.isDebugEnabled()) {
-                log.debug("使用hessian方式成功完成【序列化】操作后的数组长度:{}", bytes.length);
+                log.debug("使用【{}】方式成功完成【序列化】: " +
+                                "\n\t操作前字节数组大小 -> 操作后字节数组大小 | {} -> {}" +
+                                "\n\t序列化耗时: {} ms",
+                        QRpcBootstrap.getInstance().getConfiguration().getSerializeType(), length, bytes.length, (end - start));
             }
             return bytes;
         } catch (IOException e) {
@@ -54,8 +62,12 @@ public class HessianSerializer implements Serializer {
         ) {
             Hessian2Input hessianInput = new Hessian2Input(bais);
             T t = (T) hessianInput.readObject();
+
             if (log.isDebugEnabled()) {
                 log.debug("响应报文内对象【{}】,使用hessian方式成功完成了【反序列化】操作", clazz);
+            }
+            if (log.isDebugEnabled()) {
+                log.debug("使用hessian方式成功完成【反序列化】操作后的数组长度:{}", bytes.length);
             }
             return t;
         } catch (IOException e) {

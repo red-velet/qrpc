@@ -132,7 +132,7 @@ public class ZookeeperUtil {
         try {
             return zookeeper.getChildren(serviceNodePath, watcher);
         } catch (KeeperException | InterruptedException e) {
-            log.error("获取节点【{}】的子元素时发送异常:", serviceNodePath, e);
+            log.error("获取节点【{}】的子元素时发送异常,请求连接超时/服务故障:", serviceNodePath, e);
             throw new ZookeeperException(e);
         }
     }
