@@ -93,4 +93,6 @@ cd qprc
 ​ 个人博客: www.chiou.icu
 
 ---
+## Star History
 
+[![Star History Chart](https://api.star-history.com/svg?repos=red-velet/qrpc&type=Date)](https://star-history.com/#redvelet/qrpc&Date)
