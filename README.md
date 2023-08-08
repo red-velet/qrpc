@@ -95,4 +95,4 @@ cd qprc
 ---
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=red-velet/qrpc&type=Date)](https://star-history.com/#redvelet/qrpc&Date)
+![Star History Chart](https://star-history.com/#red-velet/qrpc&Date)
