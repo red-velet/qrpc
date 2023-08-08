@@ -94,7 +94,6 @@ cd qprc
 
 ---
 ## Star History
-## Star History
 
 <a href="https://star-history.com/#red-velet/qrpc&Date">
   <picture>
