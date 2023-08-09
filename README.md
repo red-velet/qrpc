@@ -2,7 +2,21 @@
 
  🚀🚀🚀这是一个手写RPC项目，用于实现远程过程调用（RPC）通信🚀🚀🚀
 
-## 一、功能特性
+## 一、项目架构
+
+#### 1、架构和基本流程
+
+![image-20230809134419554](img/image-20230809134419554.png)
+
+
+
+#### 2、分层和模块
+
+![image-20230809134436884](img/image-20230809134436884.png)
+
+
+
+## 二、功能特性
 
 - **简单的RPC框架的实现**：该RPC框架实现了基本的远程过程调用功能，允许客户端通过网络调用远程服务的方法，实现分布式系统之间的通信和协作。
 - **基于Netty的TCP的网络通信基本机制**
@@ -14,24 +28,16 @@
 - **请求超时与重试机制**
   ：为了保证系统的稳定性和性能，在RPC框架中实现了请求超时和重试机制。当请求超过设定的时间未得到响应时，会进行超时处理，避免长时间的等待。同时，也可以设置重试次数，当请求失败时，自动进行重试，提高请求成功率。
 - **服务治理能力**：RPC框架支持一定程度的服务治理能力，例如心跳检测器用于定期检测服务提供者的存活性，并维护连接池。此外，还支持服务的动态添加和移除，能够在运行时动态调整服务列表。
-    - 限流器：为了保护系统资源，防止过多的请求造成系统过载，RPC框架支持限流器功能。通过限制请求的并发数量或速率，可以有效地控制系统的负载，保持系统的稳定性。
+  - 限流器：为了保护系统资源，防止过多的请求造成系统过载，RPC框架支持限流器功能。通过限制请求的并发数量或速率，可以有效地控制系统的负载，保持系统的稳定性。
 
-    - 熔断器：当服务提供者出现故障或不可用时，熔断器功能可以避免无效的请求继续发送，而是及时中断对该服务的请求。这样可以减少资源浪费，并保护系统免受故障的影响。
+  - 熔断器：当服务提供者出现故障或不可用时，熔断器功能可以避免无效的请求继续发送，而是及时中断对该服务的请求。这样可以减少资源浪费，并保护系统免受故障的影响。
 
 - **与Spring Boot做简单继承**：RPC框架可以与Spring Boot进行简单的集成，方便在Spring
   Boot项目中使用RPC功能。可以通过自定义注解或配置来注册和使用RPC服务，并将RPC框架与Spring Boot的其他功能无缝结合。
 
-## 二、项目架构
 
-#### 1、组成和基本流程
 
-![makeup](img/makeup.png)
-
-#### 2、分层和模块
-
-![layering](img/layering.png)、
-
-## 二、快速开始
+## 三、快速开始
 
 1. 克隆项目到本地：
 
@@ -77,20 +83,36 @@ cd qprc
 </configuration>
 ```
 
-## 三、API文档
+
+
+## 四、API文档
 
  暂无
 ​ 请参考[API文档](docs/API.md)了解更多关于RPC框架的使用方法与API接口。
 
-## 四、贡献指南
+
+
+## 五、贡献指南
 
  欢迎提交Issue或Pull Request，感谢您的贡献！😊😊😊
 
-## 五、联系交流
+
+
+## 六、联系交流
 
  如果您有任何疑问或建议，请发送邮件至bluebeastmight@gmail.com。
 
  个人博客: www.chiou.icu
 
----
 
+
+## 七、Star History
+
+<a href="https://star-history.com/#red-velet/qrpc&Date">
+
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=red-velet/qrpc&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=red-velet/qrpc&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=red-velet/qrpc&type=Date" />
+  </picture>
+</a>

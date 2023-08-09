@@ -31,6 +31,5 @@ public class NettyBootstrapInitializer {
     public static Bootstrap getBootstrap() {
         //添加通道化配置
         return BOOTSTRAP;
-
     }
 }
