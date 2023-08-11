@@ -1,0 +1,1 @@
+gzip=icu.chiou.protocol.compress.wrapper.impl.GzipCompressor

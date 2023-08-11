@@ -1,0 +1,3 @@
+consistentHash=icu.chiou.router.impl.ConsistentHashLoadBalancer
+roundRobin=icu.chiou.router.impl.RoundRobinLoadBalancer
+minResponseTime=icu.chiou.router.impl.MinimumResponseTimeLoadBalancer

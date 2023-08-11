@@ -31,57 +31,150 @@
   - 限流器：为了保护系统资源，防止过多的请求造成系统过载，RPC框架支持限流器功能。通过限制请求的并发数量或速率，可以有效地控制系统的负载，保持系统的稳定性。
 
   - 熔断器：当服务提供者出现故障或不可用时，熔断器功能可以避免无效的请求继续发送，而是及时中断对该服务的请求。这样可以减少资源浪费，并保护系统免受故障的影响。
-
-- **与Spring Boot做简单继承**：RPC框架可以与Spring Boot进行简单的集成，方便在Spring
-  Boot项目中使用RPC功能。可以通过自定义注解或配置来注册和使用RPC服务，并将RPC框架与Spring Boot的其他功能无缝结合。
+- **整合Spring Boot**：RPC框架可以与Spring Boot进行了集成，方便在SpringBoot项目中使用RPC功能。可以通过自定义注解或配置来注册和使用RPC服务，并将RPC框架与Spring Boot的其他功能无缝结合。
+- **基于SPI机制动态加载配置**：通过SPI（Service Provider Interface）机制，用户可以动态加载和配置不同的功能模块，定制化RPC框架的行为。用户还可以自定义实现RPC的SPI，从而扩展和定制框架的功能，实现个性化需求的适配。
 
 
 
 ## 三、快速开始
 
-1. 克隆项目到本地：
+#### 1、克隆项目到本地
 
 ```bash
-git clone https://github.com/BlueBeastMight/qprc.git
-cd qprc
+https://github.com/red-velet/qrpc.git
 ```
 
-2. 修改配置文件：
 
-在`qrpc-core/src/main/resources`目录下，创建`qprc.xml`根据您的需求修改配置文件：
 
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE configuration SYSTEM "qrpc-config.dtd">
-<configuration>
-    <!--端口号-->
-    <port>8095</port>
+#### 2、打开项目目录
 
-    <!--应用名-->
-    <application>qrpc-default-applicationName</application>
+> 根目录-qrpc
 
-    <!--注册中心-->
-    <registry url="zookeeper://127.0.0.1:2181"/>
+- `qrpc-framework`：最原始的qrpc，没有集成springboot，可以根据项目的commit记录，查看每一步的编写过程，从而实现从零了解编写qrpc的过程记录。
+  - `qrpc-core`：核心包，核心代码。
+  - `qrpc-common`：常量、枚举、异常、工具类等存放地。
+- `qrpc-starter/spring-boot-starter-qrpc`：
+  - `qrpc-core`：请单独打开该模块，存放核心代码，如需使用请使用maven进行install，然后导入对应地址即可。
+  - `springboot-qrpc-test`：请单独打开该模块，测试模块，两个springboot的web项目用作提供方和调用方。
 
-    <!-- 二选一 -->
-    <!--序列化协议-->
-    <serializeType type="hessian"/>
-    <serializer code="1" name="hessian" class="icu.chiou.serialize.wrapper.impl.HessianSerializer"/>
 
-    <!-- 二选一 -->
-    <!--压缩协议-->
-    <compressType type="gzip"/>
-    <compressor code="1" name="gzip" class="icu.chiou.compress.wrapper.impl.GzipCompressor"/>
 
-    <!-- 二选一 -->
-    <!--负载均衡策略-->
-    <loadBalancer class="icu.chiou.loadbalancer.impl.MinimumResponseTimeLoadBalancer"/>
-    <loadBalancerType type="minimumResponseTime"/>
+#### 3、项目配置
 
-    <!--id生成器-->
-    <idGenerator class="icu.chiou.IDGenerator" dataCenterId="2" MachineId="4"/>
-</configuration>
+1. 本地install后，引入maven坐标：
+
+   ```xml
+   <dependency>
+       <groupId>icu.chiou</groupId>
+       <artifactId>spring-boot-starter-qrpc</artifactId>
+       <version>1.0-SNAPSHOT</version>
+   </dependency>
+   ```
+
+2. 可以修改配置项：在对应springboot的配置文件，如`application.properties`中进行自定义配置：
+
+   ```properties
+   server.port=8084
+   qrpc.port=8094
+   qrpc.serialize-type=json
+   ```
+
+   ![image-20230811231317705](img/image-20230811231317705.png)
+   
+3. 如果需要自行配置，请参考：
+
+   ```java
+   // 自行配置spi,用户SPI,文件名:接口名,文件内容:key=value
+   private static final String DIY_LOADER = "META-INF/qrpc-diy/";
+   
+   // 自行配置参数配置文件
+   qrpc.service-attachments.
+   qrpc.client-attachments.
+   ```
+
+   
+
+#### 4、服务开启
+
+注意：
+
+- 如需使用服务，需要在项目启动类上加上`@EnableQRpcProvider`或者 `@EnableQRpcConsumer`
+- 提供方和调用方都需要实现第三方的一个接口。
+- 具体使用可以参考`qrpc/qrpc-starter/spring-boot-starter-qrpc/springboot-qrpc-test`内的项目模块（需要单独打开）
+  - api：双方都实现的一个接口
+  - provider：服务提供方
+  - comsumer：服务调用方
+
+
+
+> **服务提供方开启配置**：
+
+```java
+@SpringBootApplication
+@EnableQRpcProvider
+public class ProviderApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ProviderApplication.class, args);
+    }
+}
 ```
+
+
+
+> **服务调用开启配置**：
+
+```java
+@SpringBootApplication
+@EnableQRpcConsumer
+public class ConsumerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ConsumerApplication.class, args);
+    }
+}
+```
+
+
+
+> **服务提供方使用**：
+
+```java
+@QRpcApi
+@RateLimiter(allMaxCapacity = 10, tokensPerReplenish = 10)
+@Component
+public class HelloServiceImpl implements HelloService {
+    @Override
+    public String say(String msg) {
+        return "provider has receive your msg is -->" + msg;
+    }
+}
+```
+
+
+
+> **服务调用方使用**：
+
+```java
+@RestController
+public class HelloController {
+    @QRpcService(loadBalancer = "roundRobin")
+    @CircuitBreaker(allowMaxErrorRequest = 20, allErrorRate = 0.5f)
+    HelloService helloService;
+
+
+    @RequestMapping("hello")
+    public String say() {
+        say = helloService.say("hello 😊😊😊");
+        say += "!!!";
+        return say;
+    }
+}
+```
+
+
+
+#### 5、效果图
+
+![image-20230811233349696](img/image-20230811233349696.png)
 
 
 

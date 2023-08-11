@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration SYSTEM
+        "E:\dirForRPC\qrpc-starter\qrpc\qrpc-starter\spring-boot-starter-qrpc\qrpc-core\src\main\java\icu\chiou\config\xml\builder\xml\qrpc-config.dtd">
+<configuration>
+    <!--端口号-->
+    <port>8097</port>
+
+    <!--应用名-->
+    <application>qrpc-default-applicationName</application>
+
+    <!--注册中心-->
+    <registry url="zookeeper://127.0.0.1:2181"/>
+
+    <!-- 二选一 -->
+    <!--序列化协议-->
+    <serializeType type="hessian"/>
+    <serializer code="3" name="hessian" class="icu.chiou.serialize.wrapper.impl.HessianSerializer"/>
+
+    <!-- 二选一 -->
+    <!--压缩协议-->
+    <compressType type="gzip"/>
+    <compressor code="1" name="gzip" class="icu.chiou.compress.wrapper.impl.GzipCompressor"/>
+
+    <!-- 二选一 -->
+    <!--负载均衡策略-->
+    <loadBalancer class="icu.chiou.core.QRpcBootstrap"/>
+    <loadBalancerType type="minimumResponseTime"/>
+
+    <!--id生成器-->
+    <idGenerator class="icu.chiou.IDGenerator" dataCenterId="2" MachineId="4"/>
+</configuration>

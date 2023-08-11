@@ -1,0 +1,3 @@
+jdk=icu.chiou.protocol.serialize.wrapper.impl.JdkSerializer
+hessian=icu.chiou.protocol.serialize.wrapper.impl.HessianSerializer
+json=icu.chiou.protocol.serialize.wrapper.impl.Fastjson2Serializer
