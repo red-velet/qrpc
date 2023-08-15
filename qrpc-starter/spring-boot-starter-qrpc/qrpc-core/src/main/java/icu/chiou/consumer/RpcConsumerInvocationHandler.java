@@ -1,14 +1,19 @@
 package icu.chiou.consumer;
 
 import icu.chiou.common.enumeration.RequestType;
+import icu.chiou.common.enumeration.ResponseCode;
 import icu.chiou.common.exceptions.DiscoveryException;
 import icu.chiou.common.exceptions.NetworkException;
 import icu.chiou.core.QRpcApplicationContext;
 import icu.chiou.core.QRpcProperties;
 import icu.chiou.discovery.registry.Registry;
+import icu.chiou.filter.FilterChain;
+import icu.chiou.filter.FilterData;
+import icu.chiou.filter.FilterFactory;
 import icu.chiou.netty.NettyBootstrapInitializer;
 import icu.chiou.protection.CircuitBreaker;
 import icu.chiou.protocol.transport.QRpcRequest;
+import icu.chiou.protocol.transport.QRpcResponse;
 import icu.chiou.protocol.transport.RequestPayload;
 import icu.chiou.router.LoadBalancer;
 import icu.chiou.router.LoadBalancerFactory;
@@ -76,7 +81,13 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                     .paramsType(method.getParameterTypes())
                     .paramsValue(args)
                     .returnType(method.getReturnType())
+                    .consumerAttributes(QRpcProperties.getInstance().getConsumerAttributes())
+                    .providerAttributes(QRpcProperties.getInstance().getProviderAttributes())
                     .build();
+
+            FilterData filterData = new FilterData(requestPayload);
+            FilterChain filterChain = FilterFactory.getConsumerBeforeFilterChain();
+            filterChain.doFilter(filterData);
 
             //todo 暂时这样写
             String serialization = QRpcProperties.getInstance().getSerializeType();
@@ -111,6 +122,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
             LoadBalancer loadBalancer = LoadBalancerFactory.get(interfaceRef.getName(), loadBalancerType);
             InetSocketAddress address = loadBalancer.selectAvailableService(interfaceRef.getName(), group);
             try {
+                //查看当前调用者是否开启熔断器服务
                 if (this.circuitBreaker != null) {
                     // 熔断器
                     //不是心跳请求并且断路器已经打开了
@@ -166,7 +178,11 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 QRpcApplicationContext.REQUEST_THREAD_LOCAL.remove();
 
                 // 9. 返回响应的结果
-                return completableFuture.get(10, TimeUnit.SECONDS);
+                QRpcResponse response = (QRpcResponse) completableFuture.get(10, TimeUnit.SECONDS);
+                if (response.getCode() == ResponseCode.UNAUTHENTICATED.getCode()) {
+                    return null;
+                }
+                return response.getBody();
             } catch (Exception e) {
                 log.error("对方法【{}】进行远程调用时，发生异常，正在重试第【{}】次...", method.getName(), 3 - retryCount, e);
                 if (this.circuitBreaker != null) {

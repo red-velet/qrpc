@@ -30,6 +30,7 @@ import java.util.Objects;
 public class MethodInvokeHandler extends SimpleChannelInboundHandler<QRpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, QRpcRequest msg) throws Exception {
+        log.info("---->>>>>>> enter MethodInvokeHandler");
         //1.封装响应
         QRpcResponse qRpcResponse = QRpcResponse.builder()
                 .requestId(msg.getRequestId())

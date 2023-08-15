@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * Author: chiou
@@ -29,4 +30,8 @@ public class RequestPayload implements Serializable {
 
     //4.返回值
     private Class<?> returnType;//java.lang.String
+
+    //5.拓展的值
+    private Map<String, Object> providerAttributes;
+    private Map<String, Object> consumerAttributes;
 }

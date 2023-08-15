@@ -1,0 +1,1 @@
+tokenFilter=icu.chiou.filter.impl.TokenProviderBeforeFilter
