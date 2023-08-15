@@ -102,8 +102,6 @@ public class SpiLoader {
      * @throws ClassNotFoundException
      */
     public void loadExtension(Class clazz) throws IOException, ClassNotFoundException {
-        log.info("qqqrpc-spi-loadExtension-clazz is {}........", clazz);
-
         if (clazz == null) {
             throw new IllegalArgumentException("class 没找到");
         }
@@ -112,19 +110,15 @@ public class SpiLoader {
         // 从系统SPI以及用户SPI中找bean
         for (String prefix : prefixs) {
             String spiFilePath = prefix + clazz.getName();
-            log.info("qqqrpc-spi-loadExtension-prefix is {}........", spiFilePath);
 
             Enumeration<URL> enumeration = classLoader.getResources(spiFilePath);
-            log.info("qqqrpc-spi-loadExtension-enumeration is {}........", enumeration);
 
             while (enumeration.hasMoreElements()) {
-                log.info("qqqrpc-spi-loadExtension-hasenumeration ");
                 URL url = enumeration.nextElement();
                 InputStreamReader inputStreamReader = null;
                 inputStreamReader = new InputStreamReader(url.openStream());
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 String line;
-                log.info("qqqrpc-spi-loadExtension-url is {}........", url);
 
                 while ((line = bufferedReader.readLine()) != null) {
                     log.info("qqqrpc-spi-loadExtension-line is {}........", line);
@@ -139,5 +133,10 @@ public class SpiLoader {
             }
         }
         fileCache.put(clazz.getName(), classMap);
+    }
+
+    public Map<String, Class> getFileContent(String fileName) {
+        Map<String, Class> stringClassMap = fileCache.get(fileName);
+        return stringClassMap;
     }
 }

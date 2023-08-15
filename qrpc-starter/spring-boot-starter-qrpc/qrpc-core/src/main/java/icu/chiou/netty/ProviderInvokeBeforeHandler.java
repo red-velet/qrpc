@@ -1,7 +1,9 @@
 package icu.chiou.netty;
 
-import icu.chiou.common.enumeration.RequestType;
 import icu.chiou.common.enumeration.ResponseCode;
+import icu.chiou.common.exceptions.NeedExecHeartException;
+import icu.chiou.common.exceptions.RequestRejectedException;
+import icu.chiou.common.exceptions.UnauthenticatedException;
 import icu.chiou.filter.FilterChain;
 import icu.chiou.filter.FilterData;
 import icu.chiou.filter.FilterFactory;
@@ -14,41 +16,36 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Author: chiou
  * createTime: 2023/8/14
- * Description: No Description
+ * Description: 方法调用前的前置处理器
  */
 @Slf4j
 public class ProviderInvokeBeforeHandler extends SimpleChannelInboundHandler<QRpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, QRpcRequest msg) {
-        log.info("---->>>>>>> enter TokenProviderHandler");
-        if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
-            QRpcResponse qRpcResponse = QRpcResponse.builder()
-                    .requestId(msg.getRequestId())
-                    .serializeType(msg.getSerializeType())
-                    .compressType(msg.getCompressType())
-                    .code(ResponseCode.SUCCESS_HEART_DANCE.getCode())
-                    .build();
-            ctx.channel().writeAndFlush(qRpcResponse);
-            log.info("---->>>>>>> enter TokenProviderHandler 心跳返回");
-            return;
-        }
-        log.info("---->>>>>>> enter TokenProviderHandler 比较token");
-        FilterData filterData = new FilterData(msg.getRequestPayload());
+        QRpcResponse qRpcResponse = QRpcResponse.builder()
+                .requestId(msg.getRequestId())
+                .serializeType(msg.getSerializeType())
+                .compressType(msg.getCompressType())
+                .build();
+
+        FilterData filterData = new FilterData();
+        filterData.setSocketAddress(ctx.channel().remoteAddress());
+        filterData.setConsumerAttributes(msg.getRequestPayload().getConsumerAttributes());
+        filterData.setRequestType(msg.getRequestType());
+        filterData.setInterfaceName(msg.getRequestPayload().getInterfaceName());
+
         FilterChain provdierBeforeFilterChain = FilterFactory.getProvdierBeforeFilterChain();
         try {
             provdierBeforeFilterChain.doFilter(filterData);
             ctx.fireChannelRead(msg);
-            if (log.isDebugEnabled()) {
-                log.debug("身份校验通过,token is match");
-            }
-        } catch (Exception e) {
-            log.error("TokenProviderHandler exception: --> ", e);
-            QRpcResponse qRpcResponse = QRpcResponse.builder()
-                    .requestId(msg.getRequestId())
-                    .serializeType(msg.getSerializeType())
-                    .compressType(msg.getCompressType())
-                    .code(ResponseCode.UNAUTHENTICATED.getCode())
-                    .build();
+        } catch (UnauthenticatedException e) {
+            qRpcResponse.setCode(ResponseCode.UNAUTHENTICATED.getCode());
+            ctx.channel().writeAndFlush(qRpcResponse);
+        } catch (RequestRejectedException e) {
+            qRpcResponse.setCode(ResponseCode.RATE_LIMIT.getCode());
+            ctx.channel().writeAndFlush(qRpcResponse);
+        } catch (NeedExecHeartException e) {
+            qRpcResponse.setCode(ResponseCode.SUCCESS_HEART_DANCE.getCode());
             ctx.channel().writeAndFlush(qRpcResponse);
         }
     }

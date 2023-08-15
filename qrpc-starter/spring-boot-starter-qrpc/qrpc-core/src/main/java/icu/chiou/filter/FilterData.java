@@ -5,6 +5,7 @@ import icu.chiou.protocol.transport.RequestPayload;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.net.SocketAddress;
 import java.util.Map;
 
 /**
@@ -27,12 +28,15 @@ public class FilterData {
     private Map<String, Object> providerAttributes;
     private Map<String, Object> consumerAttributes;
 
-
+    private byte requestType;
+  
+    private RequestPayload requestPayload;
     private long requestId;
     private byte compressType;
     private byte serializeType;
     private byte code;
     private Object body;
+    private SocketAddress socketAddress;
 
     public FilterData() {
     }

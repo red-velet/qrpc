@@ -6,7 +6,12 @@ package icu.chiou.common.exceptions;
  * Description: 身份认证未通过异常
  */
 public class UnauthenticatedException extends RuntimeException {
+    public UnauthenticatedException() {
+        super("Client is not authenticated");
+    }
+
     public UnauthenticatedException(String message) {
         super(message);
     }
 }
+

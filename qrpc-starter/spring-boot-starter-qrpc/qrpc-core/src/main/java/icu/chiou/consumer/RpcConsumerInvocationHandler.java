@@ -70,9 +70,6 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) {
-        log.info("进入代理对象->methodName -> {}", method.getName());
-        log.info("进入代理对象->method args -> {}", args);
-
         while (true) {
             // 1. 封装报文
             RequestPayload requestPayload = RequestPayload.builder()
@@ -180,6 +177,8 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 // 9. 返回响应的结果
                 QRpcResponse response = (QRpcResponse) completableFuture.get(10, TimeUnit.SECONDS);
                 if (response.getCode() == ResponseCode.UNAUTHENTICATED.getCode()) {
+                    return null;
+                } else if (response.getCode() == ResponseCode.RATE_LIMIT.getCode()) {
                     return null;
                 }
                 return response.getBody();

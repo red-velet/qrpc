@@ -1,1 +1,1 @@
-loggingFilter=icu.chiou.filter.impl.LoggingProviderAfterFilter
+1=icu.chiou.filter.impl.AfterResponseEncodeFilter

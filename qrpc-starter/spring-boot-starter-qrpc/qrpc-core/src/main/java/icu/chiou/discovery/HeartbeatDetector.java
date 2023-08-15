@@ -7,6 +7,7 @@ import icu.chiou.discovery.registry.Registry;
 import icu.chiou.discovery.registry.RegistryFactory;
 import icu.chiou.netty.NettyBootstrapInitializer;
 import icu.chiou.protocol.transport.QRpcRequest;
+import icu.chiou.protocol.transport.RequestPayload;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
@@ -82,11 +83,14 @@ public class HeartbeatDetector {
                     } else {
                         compressCode = 1;
                     }
+                    RequestPayload payload = new RequestPayload();
+                    payload.setConsumerAttributes(QRpcProperties.getInstance().getConsumerAttributes());
                     QRpcRequest qRpcRequest = QRpcRequest.builder()
                             .requestId(QRpcProperties.getInstance().getIdGenerator().generateId())
                             .requestType(RequestType.HEART_DANCE.getId())
                             .serializeType(serializeCode)
                             .compressType(compressCode)
+                            .requestPayload(payload)
                             .build();
                     channel.writeAndFlush(qRpcRequest);
                     long startTime = System.currentTimeMillis();
@@ -133,7 +137,7 @@ public class HeartbeatDetector {
                     //使用treeMap进行缓存
                     QRpcApplicationContext.ANSWER_TIME_CHANNEL_CACHE.put(time, channel);
                     log.debug("HeartbeatDetector -->>> task -->>> \n" +
-                            "和[{}]服务器的响应时间是[{}].", entry.getKey(), time);
+                            "[{}]服务器的响应时间是[{}].", entry.getKey(), time);
                     break;
                 }
             }

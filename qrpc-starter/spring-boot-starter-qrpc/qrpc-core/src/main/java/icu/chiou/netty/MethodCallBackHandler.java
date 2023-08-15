@@ -48,7 +48,6 @@ public class MethodCallBackHandler extends SimpleChannelInboundHandler<QRpcRespo
 
 
         if (code == ResponseCode.SUCCESS.getCode()) {
-            //服务提供方返回的结果
             completableFuture.complete(msg);
         } else if (code == ResponseCode.SUCCESS_HEART_DANCE.getCode()) {
             completableFuture.complete(null);
@@ -56,9 +55,11 @@ public class MethodCallBackHandler extends SimpleChannelInboundHandler<QRpcRespo
             if (circuitBreaker != null) {
                 circuitBreaker.recordErrorRequestCount();
             }
-            throw new ResponseException(code, ResponseCode.RATE_LIMIT.getDesc());
+            completableFuture.complete(msg);
         } else if (code == ResponseCode.UNAUTHENTICATED.getCode()) {
-            //服务提供方返回的结果
+            if (circuitBreaker != null) {
+                circuitBreaker.recordErrorRequestCount();
+            }
             completableFuture.complete(msg);
         } else if (code == ResponseCode.FAIL.getCode()) {
             if (circuitBreaker != null) {

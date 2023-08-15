@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Author: chiou
  * createTime: 2023/8/15
- * Description: No Description
+ * Description: 方法调用后的后置处理器
  */
 @Slf4j
 public class ProviderInvokeAfterHandler extends ChannelOutboundHandlerAdapter {
@@ -19,12 +19,11 @@ public class ProviderInvokeAfterHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (log.isDebugEnabled()) {
-            log.debug("enter--->>>ProviderInvokeAfterHandler--->>>write--->>>{}", msg);
+            log.debug("➡️enter ProviderInvokeAfterHandler");
         }
         try {
             FilterChain chain = FilterFactory.getProvdierAfterFilterChain();
             FilterData filterData = new FilterData();
-            filterData.setBody(msg);
             chain.doFilter(filterData);
         } catch (Exception e) {
             log.error("获取/执行-->>>provider invoke 后置过滤器失败");

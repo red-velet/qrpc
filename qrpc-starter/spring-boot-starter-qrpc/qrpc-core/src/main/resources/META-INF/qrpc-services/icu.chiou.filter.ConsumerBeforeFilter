@@ -1,1 +1,1 @@
-checkRequestFilter=icu.chiou.filter.impl.ConsumerInvokeBefore
+1=icu.chiou.filter.impl.ConsumerInvokeBefore

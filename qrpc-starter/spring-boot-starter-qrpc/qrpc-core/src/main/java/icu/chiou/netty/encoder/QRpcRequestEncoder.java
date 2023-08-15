@@ -1,7 +1,6 @@
 package icu.chiou.netty.encoder;
 
 import icu.chiou.common.constants.MessageFormatConstant;
-import icu.chiou.common.enumeration.RequestType;
 import icu.chiou.core.QRpcProperties;
 import icu.chiou.protocol.compress.CompressionFactory;
 import icu.chiou.protocol.compress.Compressor;
@@ -48,7 +47,6 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, QRpcRequest msg, ByteBuf out) throws Exception {
-        //todo 需要为不同的消息类型做不同的处理: 普通信息、心跳信息
         //封装报文
         //魔术值 4个字节
         out.writeBytes(MessageFormatConstant.MAGIC_VALUE);
@@ -66,34 +64,23 @@ public class QRpcRequestEncoder extends MessageToByteEncoder<QRpcRequest> {
         //请求id
         out.writeLong(msg.getRequestId());
 
-        //心跳类型的请求
-        if (msg.getRequestType() == RequestType.HEART_DANCE.getId()) {
-            //重新处理报文长度 再写上4个 full length
-            int currIndex = out.writerIndex();//保存当前写指针位置
-            //移动到之前的位置
-            out.writerIndex(MessageFormatConstant.FULL_LENGTH_OFFSET);
-            out.writeInt(MessageFormatConstant.HEADER_LENGTH_VALUE);
-            //归位写指针
-            out.writerIndex(currIndex);
-        } else {
-            //根据配置进行序列化
-            Serializer serializer = SerializationFactory.get(QRpcProperties.getInstance().getSerializeType());
-            //请求体
-            //byte[] body = getBodyBytes(msg.getRequestPayload());
-            byte[] body = serializer.serialize(msg.getRequestPayload());
-            //根据配置进行压缩
-            Compressor compressor = CompressionFactory.get(QRpcProperties.getInstance().getCompressType());
-            body = compressor.compress(body);
+        //根据配置进行序列化
+        Serializer serializer = SerializationFactory.get(QRpcProperties.getInstance().getSerializeType());
+        //请求体
+        //byte[] body = getBodyBytes(msg.getRequestPayload());
+        byte[] body = serializer.serialize(msg.getRequestPayload());
+        //根据配置进行压缩
+        Compressor compressor = CompressionFactory.get(QRpcProperties.getInstance().getCompressType());
+        body = compressor.compress(body);
 
-            out.writeBytes(body);
-            //重新处理报文长度 再写上4个 full length
-            int currIndex = out.writerIndex();//保存当前写指针位置
-            //移动到之前的位置
-            out.writerIndex(MessageFormatConstant.FULL_LENGTH_OFFSET);
-            out.writeInt(body.length + MessageFormatConstant.HEADER_LENGTH_VALUE);
-            //归位写指针
-            out.writerIndex(currIndex);
-        }
+        out.writeBytes(body);
+        //重新处理报文长度 再写上4个 full length
+        int currIndex = out.writerIndex();//保存当前写指针位置
+        //移动到之前的位置
+        out.writerIndex(MessageFormatConstant.FULL_LENGTH_OFFSET);
+        out.writeInt(body.length + MessageFormatConstant.HEADER_LENGTH_VALUE);
+        //归位写指针
+        out.writerIndex(currIndex);
         //日志记录
         if (log.isDebugEnabled()) {
             log.debug("请求【{}】已在服务调用方，完成报文的编码的工作", msg.getRequestId());

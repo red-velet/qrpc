@@ -1,1 +1,4 @@
-tokenFilter=icu.chiou.filter.impl.TokenProviderBeforeFilter
+1=icu.chiou.filter.impl.TokenFilter
+2=icu.chiou.filter.impl.DoorFilter
+3=icu.chiou.filter.impl.RequestTypeFilter
+4=icu.chiou.filter.impl.RateLimiterFilter

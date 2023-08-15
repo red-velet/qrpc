@@ -2,7 +2,6 @@ package icu.chiou.netty.decoder;
 
 
 import icu.chiou.common.constants.MessageFormatConstant;
-import icu.chiou.common.enumeration.RequestType;
 import icu.chiou.protocol.compress.CompressionFactory;
 import icu.chiou.protocol.compress.Compressor;
 import icu.chiou.protocol.serialize.SerializationFactory;
@@ -79,7 +78,7 @@ public class QRpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         //4.解析总长度
         int full_length = byteBuf.readInt();
 
-        //5.解析请求类型 todo 判断是否是心跳检测
+        //5.解析请求类型
         byte requestType = byteBuf.readByte();
 
         //6.解析序列化类型
@@ -100,9 +99,6 @@ public class QRpcRequestDecoder extends LengthFieldBasedFrameDecoder {
                 .compressType(compressType)
                 .build();
 
-        if (requestType == RequestType.HEART_DANCE.getId()) {
-            return qRpcRequest;
-        }
 
         //9.解析请求内容
         //9.1读取
