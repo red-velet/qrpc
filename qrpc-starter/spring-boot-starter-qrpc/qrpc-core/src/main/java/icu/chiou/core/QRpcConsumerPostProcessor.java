@@ -6,6 +6,7 @@ import icu.chiou.core.annotation.CircuitBreaker;
 import icu.chiou.core.annotation.QRpcService;
 import icu.chiou.discovery.HeartbeatDetector;
 import icu.chiou.discovery.registry.RegistryFactory;
+import icu.chiou.filter.FilterFactory;
 import icu.chiou.protocol.compress.CompressionFactory;
 import icu.chiou.protocol.serialize.SerializationFactory;
 import icu.chiou.router.LoadBalancerFactory;
@@ -45,6 +46,8 @@ public class QRpcConsumerPostProcessor implements InitializingBean, BeanPostProc
         SerializationFactory.init();
         CompressionFactory.init();
         LoadBalancerFactory.init();
+        FilterFactory.initConsumerFilter();
+
         log.info("🚀spi加载成功........\n" +
                 "ileCache {}\n" +
                 "contentCache {}", SpiLoader.fileCache, SpiLoader.contentCache);

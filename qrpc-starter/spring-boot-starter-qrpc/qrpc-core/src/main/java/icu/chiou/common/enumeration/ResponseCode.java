@@ -13,6 +13,7 @@ public enum ResponseCode {
     SUCCESS((byte) 20, "方法调用成功"),
     SUCCESS_HEART_DANCE((byte) 22, "心跳检测成功"),
     RATE_LIMIT((byte) 31, "服务端限流"),
+    UNAUTHENTICATED((byte) 41, "身份验证不通过"),
     RESOURCE_NOT_FOUND((byte) 44, "请求资源不存在"),
     FAIL((byte) 50, "方法调用发生异常"),
     CLOSING((byte) 88, "服务器正在关闭中");

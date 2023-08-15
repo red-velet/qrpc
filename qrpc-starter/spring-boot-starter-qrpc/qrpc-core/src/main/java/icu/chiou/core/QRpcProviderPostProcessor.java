@@ -5,7 +5,10 @@ import icu.chiou.core.annotation.QRpcApi;
 import icu.chiou.core.annotation.RateLimiter;
 import icu.chiou.discovery.registry.Registry;
 import icu.chiou.discovery.registry.RegistryFactory;
+import icu.chiou.filter.FilterFactory;
 import icu.chiou.netty.MethodInvokeHandler;
+import icu.chiou.netty.ProviderInvokeAfterHandler;
+import icu.chiou.netty.ProviderInvokeBeforeHandler;
 import icu.chiou.netty.decoder.QRpcRequestDecoder;
 import icu.chiou.netty.encoder.QRpcResponseEncoder;
 import icu.chiou.protection.QRpcShutdownHook;
@@ -68,7 +71,7 @@ public class QRpcProviderPostProcessor implements InitializingBean, BeanPostProc
         SerializationFactory.init();
         CompressionFactory.init();
         LoadBalancerFactory.init();
-        //FilterConfig.initServiceFilter();
+        FilterFactory.initProviderFilter();
         log.info("spi加载成功........\n" +
                 "fileCache {}\n" +
                 "contentCache {}", SpiLoader.fileCache, SpiLoader.contentCache);
@@ -96,7 +99,9 @@ public class QRpcProviderPostProcessor implements InitializingBean, BeanPostProc
                             socketChannel.pipeline()
                                     .addLast(new LoggingHandler())
                                     .addLast(new QRpcRequestDecoder())
+                                    .addLast(new ProviderInvokeBeforeHandler())
                                     .addLast(new MethodInvokeHandler())
+                                    .addLast(new ProviderInvokeAfterHandler())
                                     .addLast(new QRpcResponseEncoder());
                         }
                     });
@@ -124,7 +129,7 @@ public class QRpcProviderPostProcessor implements InitializingBean, BeanPostProc
     }
 
     @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         Class<?> beanClass = bean.getClass();
         // 找到bean上带有 QRpcApi 注解的类
         QRpcApi rpcApi = beanClass.getAnnotation(QRpcApi.class);

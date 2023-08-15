@@ -3,9 +3,7 @@ package icu.chiou.core;
 import icu.chiou.core.annotation.PropertiesField;
 import icu.chiou.core.annotation.PropertiesPrefix;
 import icu.chiou.utils.IDGenerator;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,8 +13,8 @@ import java.util.Map;
  * createTime: 2023/8/10
  * Description: ConfigurationProperties替换了@PropertiesPrefix
  */
-@Component
-@ConfigurationProperties(prefix = "qrpc")
+//@Component
+//@ConfigurationProperties(prefix = "qrpc")
 @PropertiesPrefix("qrpc.")
 public class QRpcProperties {
     /**
@@ -73,15 +71,14 @@ public class QRpcProperties {
     /**
      * 服务端额外配置数据
      */
-    @PropertiesField("service")
-    private Map<String, Object> serviceAttachments = new HashMap<>();
+    @PropertiesField("provider")
+    private Map<String, Object> providerAttributes = new HashMap<>();
 
     /**
      * 客户端额外配置数据
      */
-    @PropertiesField("client")
-    private Map<String, Object> clientAttachments = new HashMap<>();
-
+    @PropertiesField("consumer")
+    private Map<String, Object> consumerAttributes = new HashMap<>();
     private static QRpcProperties rpcProperties = new QRpcProperties();
 
     public static QRpcProperties getInstance() {
@@ -139,11 +136,11 @@ public class QRpcProperties {
         return idGenerator;
     }
 
-    public String getRegistryPassowrd() {
+    public String getRegistryPassword() {
         return registryPassword;
     }
 
-    public void setRegistryPassowrd(String registryPassowrd) {
+    public void setRegistryPassword(String registryPassowrd) {
         this.registryPassword = registryPassowrd;
     }
 
@@ -158,20 +155,20 @@ public class QRpcProperties {
         this.serializeType = serializeType;
     }
 
-    public Map<String, Object> getServiceAttachments() {
-        return serviceAttachments;
+    public Map<String, Object> getProviderAttributes() {
+        return providerAttributes;
     }
 
-    public void setServiceAttachments(Map<String, Object> serviceAttachments) {
-        this.serviceAttachments = serviceAttachments;
+    public void setProviderAttributes(Map<String, Object> providerAttributes) {
+        this.providerAttributes = providerAttributes;
     }
 
-    public Map<String, Object> getClientAttachments() {
-        return clientAttachments;
+    public Map<String, Object> getConsumerAttributes() {
+        return consumerAttributes;
     }
 
-    public void setClientAttachments(Map<String, Object> clientAttachments) {
-        this.clientAttachments = clientAttachments;
+    public void setConsumerAttributes(Map<String, Object> consumerAttributes) {
+        this.consumerAttributes = consumerAttributes;
     }
 
     public String getCompressType() {

@@ -45,9 +45,11 @@ public class HeartbeatDetector {
                 throw new RuntimeException(e);
             }
         }
+
+
         //3.定期查看服务是否存活
         Thread thread = new Thread(() -> {
-            new Timer().scheduleAtFixedRate(new MyTimeTask(), 2000, 2000);
+            new Timer().scheduleAtFixedRate(new MyTimeTask(), 3000, 3000);
         }, "QRpc-HeartDanceDetector-Thread");
         thread.setDaemon(true);
         thread.start();
@@ -108,7 +110,8 @@ public class HeartbeatDetector {
                     } catch (InterruptedException | ExecutionException | TimeoutException e) {
                         // 一旦发生问题，需要优先重试
                         tryTimes--;
-                        log.error("和地址为【{}】的主机连接发生异常.正在进行第【{}】次重试......",
+                        log.error("❌HeartbeatDetector -->>> task -->>> \n" +
+                                        "与地址为【{}】的主机连接发生异常.正在进行重新连接,第【{}】次重试......",
                                 channel.remoteAddress(), 3 - tryTimes);
 
                         // 将重试的机会用尽，将失效的地址移出服务列表
@@ -129,16 +132,18 @@ public class HeartbeatDetector {
                     long time = endTime - startTime;
                     //使用treeMap进行缓存
                     QRpcApplicationContext.ANSWER_TIME_CHANNEL_CACHE.put(time, channel);
-                    log.debug("和[{}]服务器的响应时间是[{}].", entry.getKey(), time);
+                    log.debug("HeartbeatDetector -->>> task -->>> \n" +
+                            "和[{}]服务器的响应时间是[{}].", entry.getKey(), time);
                     break;
                 }
             }
-            log.info("----------------------------------------响应时间的treeMap-----------------------------------------");
+            log.info("----------------------------------------🌲🌲🌲响应时间的treeMap🌲🌲🌲-----------------------------------------");
             for (Map.Entry<Long, Channel> entry : QRpcApplicationContext.ANSWER_TIME_CHANNEL_CACHE.entrySet()) {
                 if (log.isDebugEnabled()) {
-                    log.debug("【{}】 --> 【{}】 ", entry.getKey(), entry.getValue());
+                    log.debug("responseTime:【{}】 --->>> channel:【{}】 ", entry.getKey(), entry.getValue());
                 }
             }
+            log.info("----------------------------------------🌲🌲🌲响应时间的treeMap🌲🌲🌲-----------------------------------------");
         }
     }
 }
